@@ -1,0 +1,425 @@
+/* ==========================================================================
+   Menu TV — sélection côté navigateur
+   --------------------------------------------------------------------------
+   Le build quotidien produit un VIVIER classé (plusieurs candidats par case) ;
+   c'est cette page qui en tire la grille du jour selon les réglages locaux.
+
+   Conséquence architecturale : le serveur est sans état vis-à-vis de
+   l'utilisateur. Langues, chaînes masquées, historique et reports vivent dans
+   le navigateur. C'est ce qui permettra plus tard à N utilisateurs de partager
+   un seul index sans multiplier les appels à l'API.
+   ========================================================================== */
+
+(() => {
+  "use strict";
+
+  const CLES = {
+    reglages: "menu-tv:reglages",
+    historique: "menu-tv:historique",
+    reports: "menu-tv:reports",
+    souhaits: "menu-tv:souhaits",
+  };
+
+  const MEMOIRE_JOURS = 240;
+
+  // ---------------------------------------------------------------- stockage
+
+  function lire(cle, defaut) {
+    try {
+      const brut = localStorage.getItem(cle);
+      return brut ? JSON.parse(brut) : defaut;
+    } catch {
+      return defaut; // navigation privée, stockage plein, JSON corrompu
+    }
+  }
+
+  function ecrire(cle, valeur) {
+    try {
+      localStorage.setItem(cle, JSON.stringify(valeur));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const aujourdhui = () => new Date().toISOString().slice(0, 10);
+
+  function demain() {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function reglages() {
+    const r = lire(CLES.reglages, {});
+    return {
+      langues: Array.isArray(r.langues) && r.langues.length ? r.langues : ["fr", "en"],
+      chainesMasquees: r.chainesMasquees || [],
+    };
+  }
+
+  // ------------------------------------------------------------- historique
+
+  function purger() {
+    const h = lire(CLES.historique, {});
+    const limite = new Date();
+    limite.setDate(limite.getDate() - MEMOIRE_JOURS);
+    const iso = limite.toISOString().slice(0, 10);
+    let change = false;
+    for (const [id, date] of Object.entries(h)) {
+      if (date < iso) {
+        delete h[id];
+        change = true;
+      }
+    }
+    if (change) ecrire(CLES.historique, h);
+    return h;
+  }
+
+  // ---------------------------------------------------------------- sélection
+
+  /* Mêmes règles que la sélection serveur : une case = une vidéo, une chaîne
+     n'apparaît qu'une fois dans la grille, et les cases les plus pauvres sont
+     servies en premier pour ne pas se faire rafler leur seul candidat. */
+  function construireGrille(donnees, reg, histo, reportsDus, differes) {
+    const grille = new Map();
+    const chainesPrises = new Set();
+
+    // 1. Les reports arrivés à échéance sont posés d'office : l'utilisateur a
+    //    demandé cette vidéo pour aujourd'hui, elle passe avant le classement.
+    for (const r of reportsDus) {
+      if (grille.has(r.cellule)) continue;
+      grille.set(r.cellule, { ...r.video, reporte: true });
+      chainesPrises.add(r.video.chaine_id);
+    }
+
+    // `differes` : reportée à une date encore à venir. Sans ce filtre, la
+    // vidéo qu'on vient de repousser réapparaîtrait immédiatement — reporter
+    // ne servirait à rien.
+    const eligibles = (cellule) =>
+      (donnees.vivier[cellule] || []).filter(
+        (v) =>
+          reg.langues.includes(v.langue) &&
+          !reg.chainesMasquees.includes(v.chaine_id) &&
+          !histo[v.id] &&
+          !differes.has(v.id) &&
+          !chainesPrises.has(v.chaine_id)
+      );
+
+    const cellules = [];
+    for (const i of donnees.intentions)
+      for (const c of donnees.creneaux) cellules.push(`${i.cle}|${c.cle}`);
+
+    // Rareté calculée avant toute attribution, sinon l'ordre dépend de lui-même.
+    const rarete = new Map(
+      cellules.map((c) => [
+        c,
+        (donnees.vivier[c] || []).filter(
+          (v) => reg.langues.includes(v.langue) && !reg.chainesMasquees.includes(v.chaine_id)
+        ).length,
+      ])
+    );
+
+    for (const cellule of [...cellules].sort((a, b) => rarete.get(a) - rarete.get(b))) {
+      if (grille.has(cellule)) continue;
+      const pool = eligibles(cellule);
+      if (!pool.length) continue;
+      const gagnant = pool[0]; // le vivier arrive déjà trié par score
+      grille.set(cellule, gagnant);
+      chainesPrises.add(gagnant.chaine_id);
+    }
+    return grille;
+  }
+
+  // -------------------------------------------------------------------- rendu
+
+  const echapper = (t) =>
+    String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function dureeHtml(s) {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return h ? `${h}<small>H</small>${String(m).padStart(2, "0")}` : `${m}<small>MIN</small>`;
+  }
+
+  function fiche(v, creneau) {
+    const puces = [
+      `<span class="af-puce${v.surperf >= 1.5 ? " af-puce--fort" : ""}">×${v.surperf.toFixed(1)} vs sa moyenne</span>`,
+      `<span class="af-puce">${v.vues.toLocaleString("fr-FR")} vues</span>`,
+      `<span class="af-puce">${Math.round(v.age)} j</span>`,
+    ];
+    if (v.rattrapage) puces.push('<span class="af-puce af-puce--faible">rattrapage</span>');
+    if (v.reporte) puces.push('<span class="af-puce af-puce--fort">reportée</span>');
+
+    // Titre et miniature affichés tels quels : les métadonnées YouTube ne
+    // doivent pas être modifiées.
+    return `<article class="af-fiche" data-video="${echapper(v.id)}">
+  <a class="af-fiche__lien" href="https://www.youtube.com/watch?v=${echapper(v.id)}"
+     target="_blank" rel="noopener" data-role="ouvrir">
+    <div class="af-fiche__image">
+      <img src="https://i.ytimg.com/vi/${echapper(v.id)}/hqdefault.jpg" alt="" loading="lazy">
+      <span class="af-fiche__creneau">${echapper(creneau)}</span>
+      <span class="af-fiche__duree">${dureeHtml(v.duree_s)}</span>
+    </div>
+    <div class="af-fiche__corps">
+      <h3 class="af-fiche__titre">${echapper(v.titre)}</h3>
+      <div class="af-fiche__source">${echapper(v.chaine_nom)}</div>
+    </div>
+  </a>
+  <div class="af-fiche__pied">
+    <div class="af-fiche__signaux">${puces.join("")}</div>
+    <button type="button" class="af-bouton" data-role="reporter"
+            aria-label="Reporter « ${echapper(v.titre)} » à demain">Demain →</button>
+  </div>
+</article>`;
+  }
+
+  function rendre(donnees) {
+    const reg = reglages();
+    const histo = purger();
+
+    const reports = lire(CLES.reports, {});
+    const jour = aujourdhui();
+    const dus = Object.values(reports).filter((r) => r.date <= jour);
+    const differes = new Set(
+      Object.entries(reports).filter(([, r]) => r.date > jour).map(([id]) => id)
+    );
+    const grille = construireGrille(donnees, reg, histo, dus, differes);
+
+    const sections = donnees.intentions.map((intention, i) => {
+      const cases = donnees.creneaux
+        .map((c) => {
+          const v = grille.get(`${intention.cle}|${c.cle}`);
+          return v
+            ? fiche(v, c.libelle)
+            : `<div class="af-vide"><span class="af-vide__creneau">${c.libelle}</span><span>rien de neuf</span></div>`;
+        })
+        .join("");
+      return `<section class="af-section af-section--${i + 1}">
+  <div class="af-section__bandeau">
+    <span class="af-section__numero">${String(i + 1).padStart(2, "0")}</span>
+    <h2 class="af-section__nom">${intention.libelle}</h2>
+    <span class="af-section__sous">${intention.desc}</span>
+  </div>
+  <div class="af-section__corps"><div class="af-grille">${cases}</div></div>
+</section>`;
+    });
+
+    document.querySelector("[data-zone=grille]").innerHTML = sections.join("");
+    const compte = document.querySelector("[data-zone=compte]");
+    if (compte) compte.textContent = grille.size;
+  }
+
+  // ------------------------------------------------------------------ actions
+
+  function brancherActions(donnees) {
+    document.addEventListener("click", (e) => {
+      const bouton = e.target.closest("[data-role=reporter]");
+      if (bouton) {
+        e.preventDefault();
+        const art = bouton.closest(".af-fiche");
+        reporter(donnees, art.dataset.video);
+        return;
+      }
+      const lien = e.target.closest("[data-role=ouvrir]");
+      if (lien) {
+        const art = lien.closest(".af-fiche");
+        marquerVue(art.dataset.video);
+      }
+    });
+  }
+
+  /* Reporter, ce n'est pas mettre de côté : la vidéo quitte la grille
+     d'aujourd'hui et revient occuper SA case demain. On stocke la fiche
+     complète, pour ne pas dépendre du vivier de demain — une vidéo peut
+     sortir de la fenêtre entre-temps. */
+  function reporter(donnees, id) {
+    let trouve = null, cellule = null;
+    for (const [cle, liste] of Object.entries(donnees.vivier)) {
+      const v = liste.find((x) => x.id === id);
+      if (v) { trouve = v; cellule = cle; break; }
+    }
+    if (!trouve) {
+      const reports = lire(CLES.reports, {});
+      if (reports[id]) { // déjà reportée : on repousse d'un jour de plus
+        reports[id].date = demain();
+        ecrire(CLES.reports, reports);
+        rendre(donnees);
+      }
+      return;
+    }
+    const reports = lire(CLES.reports, {});
+    reports[id] = { date: demain(), cellule, video: trouve };
+    ecrire(CLES.reports, reports);
+    rendre(donnees);
+    annoncer("Reportée à demain.");
+  }
+
+  function marquerVue(id) {
+    const h = lire(CLES.historique, {});
+    h[id] = aujourdhui();
+    ecrire(CLES.historique, h);
+    const reports = lire(CLES.reports, {});
+    if (reports[id]) { delete reports[id]; ecrire(CLES.reports, reports); }
+  }
+
+  function annoncer(message) {
+    const zone = document.querySelector("[data-zone=annonce]");
+    if (zone) { zone.textContent = message; setTimeout(() => (zone.textContent = ""), 4000); }
+  }
+
+  // ------------------------------------------------------------------ réglages
+
+  function panneau(donnees) {
+    const reg = reglages();
+    const souhaits = lire(CLES.souhaits, []);
+    const masquees = new Set(reg.chainesMasquees);
+
+    const langues = [["fr", "Français"], ["en", "Anglais"]]
+      .map(([code, nom]) => `<label class="af-choix">
+        <input type="checkbox" data-langue="${code}" ${reg.langues.includes(code) ? "checked" : ""}>
+        <span>${nom}</span></label>`)
+      .join("");
+
+    const parIntention = donnees.intentions.map((i) => {
+      const lignes = donnees.chaines
+        .filter((c) => c.intention === i.cle)
+        .sort((a, b) => a.nom.localeCompare(b.nom, "fr"))
+        .map((c) => `<label class="af-choix">
+            <input type="checkbox" data-chaine="${echapper(c.id)}" ${masquees.has(c.id) ? "" : "checked"}>
+            <span>${echapper(c.nom)} <em>${c.langue}</em></span></label>`)
+        .join("");
+      return lignes ? `<div class="af-groupe"><h4>${i.libelle}</h4>${lignes}</div>` : "";
+    }).join("");
+
+    const listeSouhaits = souhaits.length
+      ? `<pre class="af-code" data-zone="yaml">${souhaits
+          .map((s) => `  - {handle: "${s.handle}", intention: ${s.intention}, langue: ${s.langue}}`)
+          .join("\n")}</pre>
+         <button type="button" class="af-bouton" data-role="copier">Copier ces lignes</button>
+         <button type="button" class="af-bouton af-bouton--discret" data-role="vider-souhaits">Vider</button>`
+      : '<p class="af-note">Aucune chaîne en attente.</p>';
+
+    return `<div class="af-panneau__contenu">
+  <section>
+    <h3>Langues</h3>
+    <p class="af-note">Décocher tout revient à tout afficher.</p>
+    <div class="af-choix-ligne">${langues}</div>
+  </section>
+
+  <section>
+    <h3>Ajouter un créateur</h3>
+    <p class="af-note">Une chaîne ne peut pas être ajoutée à la volée : ses vidéos
+      doivent être collectées par le build quotidien. Ces lignes sont à coller dans
+      <code>channels.yaml</code>, puis à pousser.</p>
+    <div class="af-formulaire">
+      <input type="text" data-champ="handle" placeholder="@identifiant" aria-label="Handle de la chaîne">
+      <select data-champ="intention" aria-label="Intention">
+        ${donnees.intentions.map((i) => `<option value="${i.cle}">${i.libelle}</option>`).join("")}
+      </select>
+      <select data-champ="langue" aria-label="Langue">
+        <option value="fr">fr</option><option value="en">en</option>
+      </select>
+      <button type="button" class="af-bouton" data-role="ajouter-souhait">Ajouter</button>
+    </div>
+    ${listeSouhaits}
+  </section>
+
+  <section class="af-panneau__large">
+    <h3>Créateurs suivis</h3>
+    <p class="af-note">Décocher retire la chaîne de la grille immédiatement. Rien
+      n'est supprimé du dépôt — c'est réversible.</p>
+    <div class="af-colonnes">${parIntention}</div>
+  </section>
+
+  <section>
+    <button type="button" class="af-bouton af-bouton--discret" data-role="oublier">
+      Oublier l'historique de visionnage
+    </button>
+  </section>
+</div>`;
+  }
+
+  function brancherPanneau(donnees) {
+    const hote = document.querySelector("[data-zone=panneau]");
+    const bascule = document.querySelector("[data-role=basculer-panneau]");
+    if (!hote || !bascule) return;
+
+    const peindre = () => (hote.innerHTML = panneau(donnees));
+    peindre();
+
+    bascule.addEventListener("click", () => {
+      const ouvert = hote.hasAttribute("hidden");
+      if (ouvert) hote.removeAttribute("hidden");
+      else hote.setAttribute("hidden", "");
+      bascule.setAttribute("aria-expanded", String(ouvert));
+    });
+
+    hote.addEventListener("change", (e) => {
+      const reg = reglages();
+      const l = e.target.dataset.langue;
+      if (l) {
+        reg.langues = [...hote.querySelectorAll("[data-langue]:checked")].map((i) => i.dataset.langue);
+        if (!reg.langues.length) reg.langues = ["fr", "en"];
+      }
+      const c = e.target.dataset.chaine;
+      if (c) {
+        const masquees = new Set(reg.chainesMasquees);
+        e.target.checked ? masquees.delete(c) : masquees.add(c);
+        reg.chainesMasquees = [...masquees];
+      }
+      ecrire(CLES.reglages, reg);
+      rendre(donnees);
+      if (l) peindre(); // les cases de langue se re-normalisent
+    });
+
+    hote.addEventListener("click", (e) => {
+      const role = e.target.dataset.role;
+      if (role === "ajouter-souhait") {
+        const handle = hote.querySelector("[data-champ=handle]").value.trim();
+        if (!handle) return;
+        const propre = handle.startsWith("@") ? handle : "@" + handle.replace(/^.*\/@?/, "");
+        const souhaits = lire(CLES.souhaits, []);
+        if (!souhaits.some((s) => s.handle.toLowerCase() === propre.toLowerCase())) {
+          souhaits.push({
+            handle: propre,
+            intention: hote.querySelector("[data-champ=intention]").value,
+            langue: hote.querySelector("[data-champ=langue]").value,
+          });
+          ecrire(CLES.souhaits, souhaits);
+        }
+        peindre();
+        annoncer("Ajoutée à la liste à coller dans channels.yaml.");
+      }
+      if (role === "copier") {
+        const texte = hote.querySelector("[data-zone=yaml]").textContent;
+        navigator.clipboard?.writeText(texte).then(
+          () => annoncer("Lignes copiées."),
+          () => annoncer("Copie impossible — sélectionne le texte à la main.")
+        );
+      }
+      if (role === "vider-souhaits") { ecrire(CLES.souhaits, []); peindre(); }
+      if (role === "oublier") {
+        ecrire(CLES.historique, {});
+        ecrire(CLES.reports, {});
+        rendre(donnees);
+        annoncer("Historique effacé.");
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------- démarrage
+
+  const balise = document.getElementById("mt-donnees");
+  if (!balise) return;
+  let donnees;
+  try {
+    donnees = JSON.parse(balise.textContent);
+  } catch {
+    return; // on laisse la grille rendue par le serveur
+  }
+
+  rendre(donnees);
+  brancherActions(donnees);
+  brancherPanneau(donnees);
+})();

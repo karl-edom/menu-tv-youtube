@@ -259,10 +259,19 @@ body.af {
 }
 .af-fiche__duree small { font-size: .45em; letter-spacing: .06em; margin-left: 2px; }
 
+.af-fiche__lien { display: flex; flex-direction: column; flex: 1; }
+
 .af-fiche__corps {
   padding: var(--af-e3) var(--af-e3) var(--af-e3);
   display: flex; flex-direction: column; gap: var(--af-e2); flex: 1;
 }
+
+.af-fiche__pied {
+  padding: 0 var(--af-e3) var(--af-e3);
+  display: flex; align-items: flex-end; gap: var(--af-e2);
+  justify-content: space-between;
+}
+.af-fiche__pied .af-fiche__signaux { flex: 1; }
 
 /* Titre d'élément : casse d'origine obligatoire. Les métadonnées YouTube
    doivent rester non modifiées — pas de text-transform ici. */
@@ -309,7 +318,110 @@ body.af {
 }
 
 /* --------------------------------------------------------------------------
-   6. PIED
+   6. COMMANDES ET PANNEAU DE RÉGLAGES
+   -------------------------------------------------------------------------- */
+
+.af-barre {
+  display: flex; align-items: center; gap: var(--af-e3);
+  margin-top: var(--af-e5); flex-wrap: wrap;
+}
+
+.af-bouton {
+  font-family: var(--af-texte);
+  font-size: var(--af-t-label);
+  font-weight: 700;
+  letter-spacing: var(--af-interlettre-large);
+  text-transform: uppercase;
+  color: var(--af-encre);
+  background: transparent;
+  border: 2px solid var(--af-encre);
+  border-radius: var(--af-rayon);
+  padding: 6px var(--af-e3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, color .12s;
+}
+.af-bouton:hover, .af-bouton:focus-visible {
+  background: var(--af-encre); color: var(--af-fond); outline: none;
+}
+.af-bouton--discret {
+  border-color: var(--af-trait); color: var(--af-encre-2);
+  font-weight: 600; letter-spacing: .06em;
+}
+.af-bouton--discret:hover { background: var(--af-relief-haut); color: var(--af-encre); }
+
+/* Dans une fiche, le bouton est secondaire : il ne doit pas concurrencer
+   la durée ni le titre. */
+.af-fiche .af-bouton {
+  border-width: 1px; border-color: var(--af-trait);
+  color: var(--af-encre-2); padding: 4px var(--af-e2);
+  letter-spacing: .08em; font-size: var(--af-t-micro);
+}
+.af-fiche .af-bouton:hover { border-color: var(--af-encre); color: var(--af-fond); }
+
+.af-annonce { font-size: var(--af-t-micro); color: var(--af-encre-2); }
+
+.af-panneau {
+  margin-top: var(--af-e4);
+  border: var(--af-trait-fin) solid var(--af-trait);
+  background: var(--af-relief);
+  padding: var(--af-e5);
+}
+.af-panneau[hidden] { display: none; }
+.af-panneau__contenu {
+  display: grid; gap: var(--af-e6);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
+}
+.af-panneau h3 {
+  font-family: var(--af-display); font-weight: 400;
+  font-size: 26px; text-transform: uppercase; letter-spacing: var(--af-interlettre-serre);
+  margin: 0 0 var(--af-e2);
+}
+.af-panneau h4 {
+  font-size: var(--af-t-label); font-weight: 700; text-transform: uppercase;
+  letter-spacing: var(--af-interlettre-large); color: var(--af-encre-2);
+  margin: var(--af-e4) 0 var(--af-e2);
+}
+.af-note { color: var(--af-encre-2); font-size: 12.5px; margin: 0 0 var(--af-e3); }
+.af-note code { background: var(--af-relief-haut); padding: 1px 4px; }
+
+.af-choix { display: flex; align-items: center; gap: var(--af-e2); padding: 3px 0;
+            font-size: 13px; cursor: pointer; }
+.af-choix input { width: 15px; height: 15px; accent-color: var(--af-encre); flex: none; }
+.af-choix em { color: var(--af-encre-3); font-style: normal; font-size: 11px;
+               text-transform: uppercase; letter-spacing: .08em; }
+.af-choix-ligne { display: flex; gap: var(--af-e5); flex-wrap: wrap; }
+
+.af-formulaire { display: flex; gap: var(--af-e2); flex-wrap: wrap; margin-bottom: var(--af-e3); }
+.af-formulaire input, .af-formulaire select {
+  font-family: var(--af-texte); font-size: 13px;
+  background: var(--af-fond); color: var(--af-encre);
+  border: var(--af-trait-fin) solid var(--af-trait);
+  border-radius: var(--af-rayon); padding: 6px var(--af-e2);
+}
+.af-formulaire input { flex: 1 1 150px; min-width: 0; }
+.af-formulaire input:focus-visible, .af-formulaire select:focus-visible {
+  outline: 2px solid var(--af-encre); outline-offset: -2px;
+}
+
+.af-code {
+  background: var(--af-fond); border: var(--af-trait-fin) solid var(--af-trait);
+  padding: var(--af-e3); font-size: 12px; overflow-x: auto;
+  color: var(--af-encre-2); margin: 0 0 var(--af-e3);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.af-groupe { margin-bottom: var(--af-e4); break-inside: avoid; }
+
+/* Une longue liste de cases à cocher est illisible en colonne unique : on la
+   laisse couler sur plusieurs colonnes, sans jamais couper un groupe. */
+.af-panneau__large { grid-column: 1 / -1; }
+.af-colonnes { columns: 240px 4; column-gap: var(--af-e6); }
+.af-colonnes h4:first-child { margin-top: 0; }
+
+/* --------------------------------------------------------------------------
+   7. PIED
    -------------------------------------------------------------------------- */
 
 .af-pied {
@@ -321,7 +433,7 @@ body.af {
 }
 
 /* --------------------------------------------------------------------------
-   7. PRÉFÉRENCES UTILISATEUR
+   8. PRÉFÉRENCES UTILISATEUR
    -------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {

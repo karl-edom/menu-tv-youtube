@@ -84,8 +84,32 @@ python menu_tv.py --demo         # données synthétiques, sans réseau ni clé
 intention, une langue. La liste fournie est **une proposition de départ**, pas une
 recommandation — corrige-la, c'est elle qui détermine tout le reste.
 
-Au premier run, les handles introuvables sont signalés dans le log : corrige-les
-dans `channels.yaml`, jamais dans `state/channels.json` qui est un cache.
+### Résolution des handles
+
+Un handle est d'abord cherché tel quel (`channels.list`, 1 unité). S'il n'existe
+pas, un repli par recherche se déclenche (`search.list`, 100 unités) et ne lie la
+chaîne trouvée que si son nom ressemble à plus de 70 % au handle demandé — une
+mauvaise chaîne liée en silence serait pire qu'une chaîne manquante. Les liaisons
+faites par ce repli sont listées dans le log sous **« résolus par recherche — À
+VÉRIFIER »** : jette-y un œil, c'est le seul endroit où le programme devine.
+
+Les échecs définitifs sont eux aussi mis en cache pendant 30 jours, sinon chaque
+handle mort relancerait une recherche à 100 unités tous les matins.
+
+Corrige toujours dans `channels.yaml`, jamais dans `state/channels.json` qui est un
+cache — pour forcer une nouvelle résolution, supprime la ligne correspondante du
+cache.
+
+### Rattrapage
+
+Une case ne se remplit qu'avec une vidéo de moins de 21 jours. Si aucune n'existe
+— créneau long, intention peu dotée — la fenêtre s'élargit à 75 jours **pour cette
+case seulement**, et la vignette porte la mention « rattrapage ». La fraîcheur reste
+prioritaire partout où l'offre le permet.
+
+Le log affiche à chaque run un tableau `intention × créneau` avec le nombre de
+candidats récents et le total : c'est là qu'on voit quelles intentions manquent de
+chaînes.
 
 Les réglages se trouvent en haut de `menu_tv.py` : bornes des créneaux, fenêtre de
 candidature, durée de quarantaine, poids du score.

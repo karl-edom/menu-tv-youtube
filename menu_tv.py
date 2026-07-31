@@ -479,6 +479,57 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
     return grille
 
 
+def construire_vivier(candidats: list[Video], profondeur: int = 12) -> dict:
+    """Exporte plusieurs candidats par case, pas seulement le gagnant.
+
+    C'est ce qui permet à la page de recomposer la grille selon les réglages de
+    l'utilisateur — langues, chaînes masquées, historique local — sans refaire
+    un seul appel à l'API. Le vivier n'est PAS filtré par l'historique serveur :
+    sinon un utilisateur qui ne regarde que le français se verrait brûler la
+    moitié du vivier par des choix qu'il n'a jamais vus.
+    """
+    vivier = {}
+    for inten, *_ in INTENTIONS:
+        for cren, *_ in CRENEAUX:
+            lot = sorted(
+                (
+                    v for v in candidats
+                    if v.intention == inten and creneau_de(v.duree_s) == cren
+                ),
+                key=lambda v: v.score,
+                reverse=True,
+            )[:profondeur]
+            if lot:
+                vivier[f"{inten}|{cren}"] = [
+                    {
+                        "id": v.id,
+                        "titre": v.titre,
+                        "chaine_id": v.chaine_id,
+                        "chaine_nom": v.chaine_nom,
+                        "langue": v.langue,
+                        "duree_s": v.duree_s,
+                        "vues": v.vues,
+                        "age": round(v.age_jours, 1),
+                        "surperf": v.detail.get("surperformance", 1.0),
+                        "rattrapage": v.age_jours > FENETRE_JOURS,
+                    }
+                    for v in lot
+                ]
+    return vivier
+
+
+def construire_donnees(candidats: list[Video], chaines_actives: list[dict]) -> dict:
+    return {
+        "genere_le": datetime.now(timezone.utc).date().isoformat(),
+        "intentions": [
+            {"cle": c, "libelle": l, "desc": d} for c, l, d in INTENTIONS
+        ],
+        "creneaux": [{"cle": c, "libelle": l} for c, l, *_ in CRENEAUX],
+        "chaines": chaines_actives,
+        "vivier": construire_vivier(candidats),
+    }
+
+
 def diagnostic(candidats: list[Video]) -> str:
     """Où sont les trous ? Sans ça, on corrige à l'aveugle."""
     lignes = [
@@ -521,15 +572,27 @@ GABARIT = """<!doctype html>
 <header class="af-entete">
   <div class="af-entete__date">{date_longue}</div>
   <h1 class="af-entete__titre">Menu TV</h1>
-  <p class="af-entete__chapo">{nb} propositions pour aujourd'hui, une par case.
-     Rien de plus. Ce qui a déjà été proposé ne reviendra pas avant {memoire} jours.</p>
+  <p class="af-entete__chapo"><span data-zone="compte">{nb}</span> propositions pour
+     aujourd'hui, une par case. Rien de plus. Ce qui a déjà été proposé ne reviendra
+     pas avant {memoire} jours.</p>
+  <div class="af-barre">
+    <button type="button" class="af-bouton" data-role="basculer-panneau"
+            aria-expanded="false" aria-controls="panneau">Réglages</button>
+    <span class="af-annonce" role="status" aria-live="polite" data-zone="annonce"></span>
+  </div>
+  <div class="af-panneau" id="panneau" data-zone="panneau" hidden></div>
 </header>
+<main data-zone="grille">
 {sections}
+</main>
 <footer class="af-pied">
   {nb_candidats} vidéos examinées sur {nb_chaines} chaînes · {unites} unités de quota
   consommées · sélection sur signaux objectifs — sur-performance relative à la chaîne,
   réception, fraîcheur — sans intervention éditoriale.
+  Les réglages et l'historique restent dans ce navigateur, rien n'est envoyé nulle part.
 </footer>
+<script id="mt-donnees" type="application/json">{donnees}</script>
+<script src="app.js" defer></script>
 </body></html>
 """
 
@@ -543,7 +606,7 @@ def decouper_duree(v: "Video") -> str:
     return f'{m}<small>MIN</small>'
 
 
-def rendre(grille: dict, stats: dict) -> str:
+def rendre(grille: dict, stats: dict, donnees: dict) -> str:
     maintenant = datetime.now()
     mois = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
             "août", "septembre", "octobre", "novembre", "décembre"]
@@ -582,7 +645,9 @@ def rendre(grille: dict, stats: dict) -> str:
             # être affichées non modifiées. Les capitales sont réservées à nos
             # propres libellés.
             fiches.append(
-                f'<a class="af-fiche" href="{v.url}" target="_blank" rel="noopener">'
+                f'<article class="af-fiche" data-video="{v.id}">'
+                f'<a class="af-fiche__lien" href="{v.url}" target="_blank"'
+                f' rel="noopener" data-role="ouvrir">'
                 f'<div class="af-fiche__image">'
                 f'<img src="{v.miniature}" alt="" loading="lazy">'
                 f'<span class="af-fiche__creneau">{c_lib}</span>'
@@ -591,8 +656,12 @@ def rendre(grille: dict, stats: dict) -> str:
                 f'<div class="af-fiche__corps">'
                 f'<h3 class="af-fiche__titre">{escape(v.titre)}</h3>'
                 f'<div class="af-fiche__source">{escape(v.chaine_nom)}</div>'
-                f'<div class="af-fiche__signaux">{"".join(puces)}</div>'
                 f"</div></a>"
+                f'<div class="af-fiche__pied">'
+                f'<div class="af-fiche__signaux">{"".join(puces)}</div>'
+                f'<button type="button" class="af-bouton" data-role="reporter">'
+                f"Demain →</button>"
+                f"</div></article>"
             )
 
         sections.append(
@@ -613,6 +682,8 @@ def rendre(grille: dict, stats: dict) -> str:
         nb=len(grille),
         memoire=MEMOIRE_JOURS,
         sections="\n".join(sections),
+        donnees=json.dumps(donnees, ensure_ascii=False, separators=(",", ":"))
+                   .replace("</", "<\\/"),
         **stats,
     )
 
@@ -691,8 +762,17 @@ def main():
     histo_chaines = charger_json("channels_seen.json", {})
     unites = 0
 
+    # Annuaire exporté vers la page : c'est lui qui alimente la liste des
+    # créateurs dans le panneau de réglages.
+    chaines_exportees = []
+
     if args.demo:
         toutes = fabriquer_demo(chaines)
+        chaines_exportees = [
+            {"id": c["handle"], "nom": c["handle"].lstrip("@"),
+             "handle": c["handle"], "intention": c["intention"], "langue": c["langue"]}
+            for c in chaines
+        ]
         print(f"[démo] {len(toutes)} vidéos synthétiques sur {len(chaines)} chaînes")
     else:
         cle = os.environ.get("YT_API_KEY")
@@ -713,6 +793,11 @@ def main():
 
         actives = [
             c for c in chaines if cache.get(c["handle"], {}).get("id")
+        ]
+        chaines_exportees = [
+            {"id": cache[c["handle"]]["id"], "nom": cache[c["handle"]]["nom"],
+             "handle": c["handle"], "intention": c["intention"], "langue": c["langue"]}
+            for c in actives
         ]
         par_chaine = {}
         with ThreadPoolExecutor(max_workers=12) as ex:
@@ -787,11 +872,18 @@ def main():
         print("⚠ theme/theme.css introuvable — page sans mise en forme",
               file=sys.stderr)
 
+    script = RACINE / "app.js"
+    if script.exists():
+        (SORTIE / "app.js").write_text(
+            script.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+
+    donnees = construire_donnees(candidats, chaines_exportees)
     html = rendre(grille, {
         "nb_candidats": len(candidats),
         "nb_chaines": len(par_cid),
         "unites": unites,
-    })
+    }, donnees)
     (SORTIE / "index.html").write_text(html, encoding="utf-8")
     print(f"→ {SORTIE / 'index.html'}")
 
