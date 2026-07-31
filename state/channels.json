@@ -7,6 +7,12 @@
   "id": "UCwI-JbGNsojunnHbFAc0M4Q",
   "nom": "ARTE"
  },
+ "@AdamSavagesTested": {
+  "id": "UCiDJtJKMICpb9B1qf7qjEOA",
+  "nom": "Adam Savage’s Tested",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
  "@Adamneely": {
   "id": "UCnkp4xDOwqqJD7sSM3xdUiQ",
   "nom": "Adam Neely"
@@ -14,6 +20,12 @@
  "@AppliedScience": {
   "id": "UCivA7_KLKWo43tFcCkFvydw",
   "nom": "Applied Science"
+ },
+ "@ArteCinema": {
+  "id": "UClo03hULFynpoX3w1Jv7fhw",
+  "nom": "ARTE Cinema",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@Astronogeek": {
   "id": "UC5X4e8ScZI2AFd_vkjSoyoQ",
@@ -39,9 +51,21 @@
   "id": "UC2C_jShtL725hvbm1arSV9w",
   "nom": "CGP Grey"
  },
+ "@Cestuneautrehistoire": {
+  "id": "UCKjDY4joMPcoRMmd-G1yz1Q",
+  "nom": "C'est une autre histoire",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
  "@ConfessionsdHistoire": {
   "id": "UCzj9-ZfpJ74vYv1RZzAWTVg",
   "nom": "Confessions d'Histoire"
+ },
+ "@Cuisine-AZ": {
+  "id": "UCE5fU4YOqxrApoTuCGyIwzg",
+  "nom": "cuisine az",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@Cyprien": {
   "id": "UCyWqModMQlbIo8274Wh_ZsQ",
@@ -103,9 +127,25 @@
   "id": "UCRcgy6GzDeccI7dkbbBna3Q",
   "nom": "LEMMiNO"
  },
+ "@LaminuteAgricole": {
+  "id": "UC9fjMXDS-UisVyNxYJVLp5A",
+  "nom": "La Minute Agricole",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
+ "@LeFossoyeurdeFilms": {
+  "id": "UCwbV8cTR4yBgFdfa_BXV2OA",
+  "nom": "Le Fossoyeur de Films",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
  "@LeReveilleur": {
   "id": "UC1EacOJoqsKaYxaDomTCTEQ",
   "nom": "Le Réveilleur"
+ },
+ "@LesRevueursOfficiel": {
+  "date": "2026-07-31T22:00:30.152111+00:00",
+  "echec": true
  },
  "@LikeStoriesofOld": {
   "id": "UCs7nPQIEba0T3tGOWWsZpJQ",
@@ -163,6 +203,12 @@
   "id": "UCgNg3vwj3xt7QOrcIDaHdFg",
   "nom": "PolyMatter"
  },
+ "@Practical_Engineering": {
+  "id": "UCMOqf8ab-42UUQIdVoKwjlQ",
+  "nom": "Practical Engineering",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
  "@RealLifeLore": {
   "id": "UCP5tjEmvPItGyLhmjdwP7Ww",
   "nom": "RealLifeLore"
@@ -170,6 +216,12 @@
  "@ScienceEtonnante": {
   "id": "UCaNlbnghtwlsGF-KzAFThqA",
   "nom": "ScienceEtonnante"
+ },
+ "@SlowMoGuys": {
+  "id": "UCUK0HBIBWgM2c4vsPhkYY4w",
+  "nom": "The Slow Mo Guys",
+  "resolu_par_recherche": true,
+  "ressemblance": 0.87
  },
  "@SmarterEveryDay": {
   "id": "UC6107grRI4m0o2-emgoDnAA",
@@ -186,6 +238,12 @@
  "@StuffMadeHere": {
   "id": "UCj1VqrHhDte54oLgPG4xpuQ",
   "nom": "Stuff Made Here"
+ },
+ "@StupidEconomics": {
+  "id": "UCyJDHgrsUKuWLe05GvC2lng",
+  "nom": "Stupid Economics",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@TLDRnewsEU": {
   "id": "UC-eegKVWEgBCa4OzjnK_PtA",
@@ -230,6 +288,12 @@
  "@bbcearth": {
   "id": "UCwmZiChSryoWQCZMIQezgTg",
   "nom": "BBC Earth"
+ },
+ "@blast-info": {
+  "id": "UCHSzwfn3I8pOsr-pfPM8cUg",
+  "nom": "blast info",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@datagueule": {
   "id": "UCm5wThREh298TkK8hCT9HuA",
