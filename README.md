@@ -5,7 +5,9 @@ Une grille fermée de propositions quotidiennes, contre le scrolling infini.
 Six intentions × quatre durées = vingt-quatre cases, **une vidéo par case**, jamais
 deux fois la même. Pas de liste à parcourir, pas de « voir plus ».
 
-|                        | Café (4-12 min) | Pause (12-30) | Soirée (30-75) | Long cours (75+) |
+En ligne : **https://karl-edom.github.io/menu-tv-youtube/**
+
+|                        | Café (3-12 min) | Pause (12-30) | Soirée (30-75) | Long cours (75+) |
 |------------------------|-----------------|---------------|----------------|------------------|
 | Apprendre              | ● | ● | ● | ● |
 | Comprendre le monde    | ● | ● | ● | ● |
@@ -13,6 +15,27 @@ deux fois la même. Pas de liste à parcourir, pas de « voir plus ».
 | Se cultiver            | ● | ● | ● | ● |
 | Faire                  | ● | ● | ● | ● |
 | Se détendre            | ● | ● | ● | ● |
+
+---
+
+## Publier une modification
+
+**Clic droit sur `publier.ps1` → Exécuter avec PowerShell.**
+
+C'est tout. Le script enregistre tes modifications, récupère ce que le robot a
+écrit de son côté, envoie sur GitHub, et t'affiche les liens utiles. Il n'ouvre
+jamais d'éditeur de texte et s'arrête en français si quelque chose cloche.
+
+Ensuite, pour régénérer le menu tout de suite sans attendre demain matin :
+[Actions](https://github.com/karl-edom/menu-tv-youtube/actions) → *Menu TV
+quotidien* → **Run workflow**.
+
+> Les trois mots de git, en clair : **commit** = enregistrer une photo du dossier
+> sur ta machine · **push** = l'envoyer sur GitHub · **pull** = récupérer ce que
+> GitHub a et que tu n'as pas. Le robot écrit lui aussi dans le dépôt, d'où la
+> nécessité du troisième. `publier.ps1` fait les trois dans le bon ordre.
+
+---
 
 ## Comment la sélection fonctionne
 
@@ -30,102 +53,175 @@ Puis deux pénalités :
 
 - **Racolage** — mesuré sur la typographie du titre seulement : excès de capitales
   au-delà de la moitié du titre, ponctuation redoublée, emojis, formules types.
-  C'est un critère objectif, pas un jugement sur le contenu.
-- **Redondance** — une chaîne déjà proposée dans les 10 derniers jours est
-  fortement pénalisée, et n'apparaît jamais deux fois dans la même grille.
+  Critère objectif, pas un jugement sur le contenu.
+- **Redondance** — une chaîne déjà proposée récemment est fortement pénalisée, et
+  n'apparaît jamais deux fois dans la même grille.
 
-Et une exclusion stricte : **une vidéo déjà proposée ne revient pas avant 240 jours.**
-C'est la règle qui répond au « cerveau qui redit non ». L'historique vit dans
-`state/history.json`, versionné par git.
+**Rattrapage** : une case ne se remplit qu'avec une vidéo de moins de 21 jours. Si
+aucune n'existe — créneau long, intention peu dotée — la fenêtre s'élargit à 75
+jours **pour cette case seulement**, et la vignette porte la mention.
+
+---
 
 ## Architecture
 
 ```
-flux RSS publics  ──►  enrichissement API  ──►  score  ──►  grille  ──►  page HTML
-  (gratuit,             (durée, vues, likes)                            (statique)
-   sans quota)          ~50 unités/jour
+flux RSS publics  ──►  enrichissement API  ──►  vivier classé  ──►  page
+  (gratuit,             (durée, vues, likes)     (9-12 par case)      │
+   sans quota)          ~20 unités/jour                              │
+                                                                     ▼
+                                              le navigateur compose TA grille
+                                              (langues, chaînes, historique)
 ```
 
 La découverte passe par les flux RSS publics de chaque chaîne
-(`youtube.com/feeds/videos.xml?channel_id=…`) : pas de clé, pas de quota, pas de
-limite. L'API officielle n'intervient que pour ce que le RSS ne donne pas — la
-durée surtout, qui détermine le créneau. À 1 unité pour 50 vidéos, on consomme
-environ 50 unités par jour sur les 10 000 disponibles. Le quota n'est jamais un
-sujet, à condition de **ne jamais utiliser `search.list`** (100 unités l'appel).
+(`youtube.com/feeds/videos.xml?channel_id=…`) : pas de clé, pas de quota. L'API
+officielle n'intervient que pour ce que le RSS ne donne pas — la durée surtout,
+qui détermine le créneau. Mesuré en conditions réelles : **95 unités pour 919
+vidéos sur 65 chaînes**, sur les 10 000 disponibles par jour.
+
+**Règle absolue : ne jamais appeler `search.list` dans le job quotidien** — 100
+unités l'appel, soit une centaine de requêtes par jour maximum. Seule exception,
+le repli de résolution des handles, plafonné par un cache d'échecs de 30 jours.
+
+Le build n'exporte pas une grille figée mais un **vivier** : les 9 à 12 meilleurs
+candidats de chaque case, embarqués en JSON dans la page. C'est le navigateur qui
+tire la grille selon tes réglages. Conséquence : le serveur ne sait rien de toi, et
+le jour où plusieurs personnes utilisent le site, elles partagent un seul index
+sans multiplier les appels à l'API.
 
 Tout tourne sur GitHub Actions : pas de serveur, pas de coût.
 
-## Installation
+---
+
+## Les réglages, dans la page
+
+Bouton **Réglages** en haut. Tout reste dans ton navigateur, rien n'est envoyé
+nulle part — et donc ton téléphone aura ses propres réglages.
+
+**Langues** — français, anglais, ou les deux. Décocher tout revient à tout
+afficher plutôt qu'à vider l'écran.
+
+**Retirer un créateur** — immédiat et réversible. La chaîne disparaît de la grille,
+la case se recompose avec le candidat suivant. Rien n'est supprimé du dépôt.
+
+**Ajouter un créateur** — ne peut pas être instantané : les vidéos d'une nouvelle
+chaîne doivent être collectées par le build. Le panneau constitue une file
+d'attente et génère les lignes exactes à coller dans `channels.yaml`, avec un
+bouton pour les copier.
+
+**Demain →** sur chaque fiche — la vidéo quitte la grille du jour, la case se
+remplit avec le suivant, et elle revient **à sa place** demain avec la mention
+« reportée ». Ce n'est pas une liste où les choses s'empilent et meurent.
+
+---
+
+## `channels.yaml` — le seul fichier à maintenir
+
+Une ligne par chaîne : un handle, une intention, une langue. C'est lui qui
+détermine toute la qualité de la grille.
+
+```yaml
+  - {handle: "@ScienceEtonnante", intention: apprendre, langue: fr}
+```
+
+Intentions possibles : `apprendre`, `monde`, `emerveiller`, `culture`, `faire`,
+`detente`. Langues : `fr`, `en`.
+
+### Résolution des handles
+
+Un handle est d'abord cherché tel quel (1 unité). S'il n'existe pas, un repli par
+recherche se déclenche (100 unités) et ne lie la chaîne trouvée que si son nom
+ressemble à plus de 70 % au handle demandé — une mauvaise chaîne liée en silence
+serait pire qu'une chaîne manquante. Ces liaisons apparaissent dans le log sous
+**« résolus par recherche — À VÉRIFIER »** : c'est le seul endroit où le programme
+devine.
+
+Corrige toujours dans `channels.yaml`, jamais dans `state/channels.json` qui est un
+cache. Pour forcer une nouvelle résolution, supprime la ligne correspondante du
+cache.
+
+### Lire le log
+
+Chaque run affiche un tableau `intention × créneau` avec le nombre de candidats
+récents et le total. C'est là qu'on voit quelles intentions manquent de chaînes —
+une case vide n'est pas un bug, c'est un signal.
+
+---
+
+## Installation, depuis zéro
 
 **1. La clé API** — [console.cloud.google.com](https://console.cloud.google.com/) →
 nouveau projet → *APIs & Services* → activer **YouTube Data API v3** → *Credentials*
 → *Create credentials* → *API key*. Gratuit, aucune carte bancaire.
 
-**2. Le dépôt** — pousse ce dossier sur GitHub, puis :
+**2. Le dépôt** — pousse le dossier sur GitHub, puis :
 
 - *Settings → Secrets and variables → Actions* → nouveau secret `YT_API_KEY`
 - *Settings → Pages* → Source : **GitHub Actions**
 - *Actions* → « Menu TV quotidien » → **Run workflow** pour le premier tir
 
-Le menu est ensuite publié chaque matin sur `https://<toi>.github.io/<dépôt>/`.
-
-**3. En local**, pour essayer :
+**3. En local**, pour essayer sans rien casser :
 
 ```bash
 pip install requests pyyaml
-export YT_API_KEY="..."
-python menu_tv.py --dry-run      # génère public/index.html sans toucher la mémoire
-python menu_tv.py --demo         # données synthétiques, sans réseau ni clé
+python menu_tv.py --demo       # données synthétiques, sans réseau ni clé
+python menu_tv.py --dry-run    # vrai run, mais n'écrit pas l'historique
 ```
 
-## À régler
+---
 
-`channels.yaml` est le seul fichier à maintenir. Chaque ligne : un handle, une
-intention, une langue. La liste fournie est **une proposition de départ**, pas une
-recommandation — corrige-la, c'est elle qui détermine tout le reste.
+## Où vivent les choses
 
-### Résolution des handles
+| Fichier | Rôle |
+|---|---|
+| `channels.yaml` | La liste des chaînes. Le seul fichier éditorial. |
+| `menu_tv.py` | Collecte, score, sélection, rendu. Aucune couleur, aucune taille. |
+| `app.js` | La sélection côté navigateur et le panneau de réglages. |
+| `theme/theme.css` | **Toute** l'identité visuelle. Autonome, réutilisable ailleurs. |
+| `theme/IDENTITE.md` | Ce que signifie chaque token et les règles à ne pas casser. |
+| `publier.ps1` | Publier sans taper de git. |
+| `state/` | Caches régénérables. Écrits par le robot, pas par toi. |
+| `public/` | **N'existe pas dans le dépôt.** Généré à chaque run, envoyé directement à Pages. |
 
-Un handle est d'abord cherché tel quel (`channels.list`, 1 unité). S'il n'existe
-pas, un repli par recherche se déclenche (`search.list`, 100 unités) et ne lie la
-chaîne trouvée que si son nom ressemble à plus de 70 % au handle demandé — une
-mauvaise chaîne liée en silence serait pire qu'une chaîne manquante. Les liaisons
-faites par ce repli sont listées dans le log sous **« résolus par recherche — À
-VÉRIFIER »** : jette-y un œil, c'est le seul endroit où le programme devine.
+Ce dernier point surprend souvent : le dépôt contient la recette, pas le plat. Le
+HTML est recuisiné chaque matin sur une machine jetable louée par GitHub, puis
+servi à Pages. Pour le voir tel qu'il est publié : *Actions* → un run → section
+**Artifacts** → `github-pages`.
 
-Les échecs définitifs sont eux aussi mis en cache pendant 30 jours, sinon chaque
-handle mort relancerait une recherche à 100 unités tous les matins.
-
-Corrige toujours dans `channels.yaml`, jamais dans `state/channels.json` qui est un
-cache — pour forcer une nouvelle résolution, supprime la ligne correspondante du
-cache.
-
-### Rattrapage
-
-Une case ne se remplit qu'avec une vidéo de moins de 21 jours. Si aucune n'existe
-— créneau long, intention peu dotée — la fenêtre s'élargit à 75 jours **pour cette
-case seulement**, et la vignette porte la mention « rattrapage ». La fraîcheur reste
-prioritaire partout où l'offre le permet.
-
-Le log affiche à chaque run un tableau `intention × créneau` avec le nombre de
-candidats récents et le total : c'est là qu'on voit quelles intentions manquent de
-chaînes.
-
-Les réglages se trouvent en haut de `menu_tv.py` : bornes des créneaux, fenêtre de
-candidature, durée de quarantaine, poids du score.
-
-## Ce qui n'est pas encore fait
-
-- Le treemap de réglage (pondération fine des thématiques sous chaque intention).
-- La détection de langue réelle de la vidéo — pour l'instant on se fie à la langue
-  déclarée de la chaîne dans `channels.yaml`.
-- Un bouton « pas ce soir » qui pousse une vidéo dans l'historique sans l'avoir vue.
+---
 
 ## Conformité
 
-L'ouverture d'une vidéo renvoie vers YouTube (`watch?v=…`), donc l'app YouTube si
-elle est installée. Titres et miniatures sont affichés sans modification. Ces deux
-points sont exigés par les *YouTube API Services Developer Policies*, qui
-interdisent par ailleurs de cloner l'expérience YouTube sans valeur ajoutée
-indépendante — ici, la contrainte de rareté et la sélection sur sur-performance
-relative.
+L'ouverture d'une vidéo renvoie vers YouTube, donc vers l'application YouTube si
+elle est installée. Titres et miniatures sont affichés sans modification — c'est
+pourquoi les titres de vidéos ne sont jamais mis en capitales, contrairement aux
+libellés du site. Ces points sont exigés par les *YouTube API Services Developer
+Policies*, qui interdisent par ailleurs de cloner l'expérience YouTube sans valeur
+ajoutée indépendante : ici, la contrainte de rareté et la sélection sur
+sur-performance relative.
+
+Aucun lecteur n'est embarqué dans la page. C'est un choix de conformité, qui a
+aussi une conséquence économique : la règle interdisant de faire payer l'accès à
+un lecteur embarqué ne s'applique pas.
+
+---
+
+## Ce qui n'est pas encore fait
+
+- **Rédac chef automatique** : un job hebdomadaire qui découvre des chaînes, les
+  classe et les propose à valider. Prérequis pour des bouquets prêts à l'emploi.
+- **Treemap de réglage** : pondération fine des thématiques sous chaque intention.
+- **Langue réelle de la vidéo** : `defaultAudioLanguage` arrive dans l'appel qu'on
+  fait déjà, donc à coût nul — pour l'instant on se fie à la langue de la chaîne.
+- **Synchronisation entre appareils** : demanderait un compte, donc un serveur.
+- **Ajout de chaînes par un visiteur** : voir la piste des issues GitHub.
+- **Polices auto-hébergées** : aujourd'hui chargées depuis Google Fonts.
+
+## Limites connues
+
+- Les réglages sont liés à un navigateur. Changer d'appareil = repartir de zéro.
+- Le vivier pèse ~67 Ko en clair dans la page. Si la liste de chaînes triple, il
+  faudra le sortir dans un fichier séparé plutôt que l'embarquer.
+- La liste de chaînes fournie au départ n'a pas été validée : certains handles
+  sont faux et sont signalés au premier run.
