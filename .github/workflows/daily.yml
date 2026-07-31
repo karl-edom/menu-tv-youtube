@@ -1,0 +1,50 @@
+name: Menu TV quotidien
+
+on:
+  schedule:
+    # 06h00 UTC = 08h00 Paris en été, 07h00 en hiver.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: menu-tv
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests pyyaml
+      - name: Generer la grille
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+        run: python menu_tv.py
+      - name: Memoriser ce qui a ete propose
+        run: |
+          git config user.name  "menu-tv-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add state/
+          git diff --staged --quiet || git commit -m "menu du $(date -u +%F)"
+          git push
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  publier:
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4
