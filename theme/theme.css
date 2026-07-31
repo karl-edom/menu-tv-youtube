@@ -1,0 +1,335 @@
+/* ==========================================================================
+   AFFICHE — système visuel
+   --------------------------------------------------------------------------
+   Feuille autonome. Aucune dépendance au projet qui la consomme : elle ne
+   connaît que des rôles (surface, encre, teinte, échelle) et des composants
+   génériques préfixés .af-.
+
+   Pour la réutiliser ailleurs : copier ce fichier, ne toucher qu'au bloc
+   :root. Pour la remplacer : réécrire ce fichier en gardant les mêmes noms
+   de classes, le HTML n'a pas à changer.
+
+   Voir IDENTITE.md pour la signification de chaque token et les règles à
+   ne pas casser.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TOKENS
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* — Surfaces ————————————————————————————————————————————————— */
+  --af-fond:          #08080a;   /* fond de page, presque noir */
+  --af-relief:        #101015;   /* blocs posés sur le fond */
+  --af-relief-haut:   #191920;   /* survol, puces */
+  --af-trait:         #24242e;
+
+  /* — Encres ——————————————————————————————————————————————————— */
+  --af-encre:         #f4f4f7;
+  --af-encre-2:       #9a9aa6;   /* 6.5:1 sur le fond */
+  --af-encre-3:       #61616d;   /* décoratif, jamais porteur de sens */
+
+  /* — Teintes catégorielles ————————————————————————————————————
+     L'ORDRE EST LE MÉCANISME DE SÉPARATION DALTONISME, PAS UN CHOIX
+     ESTHÉTIQUE. Palette validée (bande de clarté OKLCH, plancher de chroma,
+     ΔE protan/deutan sur paires adjacentes, contraste ≥ 3:1 sur les deux
+     surfaces sombres). Ne pas réordonner, ne pas substituer une teinte
+     isolée sans revalider l'ensemble.
+
+     Chaque teinte porte son encre : le texte posé SUR l'aplat doit atteindre
+     4,5:1. Cinq teintes veulent du noir, la verte du blanc — c'est mesuré,
+     pas arbitraire. */
+  --af-t1:            #3987e5;  --af-t1-encre: #0a0a0c;  /* 5.44:1 */
+  --af-t2:            #d95926;  --af-t2-encre: #0a0a0c;  /* 5.09:1 */
+  --af-t3:            #199e70;  --af-t3-encre: #0a0a0c;  /* 5.81:1 */
+  --af-t4:            #c98500;  --af-t4-encre: #0a0a0c;  /* 6.44:1 */
+  --af-t5:            #d55181;  --af-t5-encre: #0a0a0c;  /* 5.01:1 */
+  --af-t6:            #008300;  --af-t6-encre: #ffffff;  /* 4.95:1 */
+
+  /* — Typographie ——————————————————————————————————————————————
+     Deux familles, deux rôles. La display ne sert JAMAIS au texte courant :
+     elle est faite pour être lue de loin, pas longtemps. */
+  --af-display: "Anton", "Haettenschweiler", "Arial Narrow", system-ui, sans-serif;
+  --af-texte:   "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Échelle : le style affiche vit du RAPPORT entre les niveaux, pas des
+     valeurs absolues. L'écart géant↔micro est d'un facteur 8. Le réduire
+     tue l'identité plus sûrement que changer les couleurs. */
+  --af-t-geant:   clamp(46px, 7.5vw, 104px);  /* titre de page */
+  --af-t-section: clamp(32px, 5vw,   64px);   /* nom de catégorie */
+  --af-t-duree:   clamp(24px, 3vw,   40px);   /* durée sur la vignette */
+  --af-t-titre:   17px;                       /* titre d'élément */
+  --af-t-corps:   14px;
+  --af-t-label:   12px;                       /* étiquettes capitales */
+  --af-t-micro:   11px;
+
+  --af-interlettre-large: .16em;   /* étiquettes en capitales */
+  --af-interlettre-serre: -.02em;  /* display */
+
+  /* — Géométrie ————————————————————————————————————————————————
+     Zéro arrondi et ombre franche sans flou : c'est ce qui distingue
+     l'affiche du dashboard. Ne pas « adoucir ». */
+  --af-rayon:        0;
+  --af-trait-fin:    1px;
+  --af-trait-epais:  3px;
+  --af-decalage:     6px;          /* décalage de l'ombre portée */
+
+  /* — Rythme ———————————————————————————————————————————————————— */
+  --af-e1: 4px;  --af-e2: 8px;  --af-e3: 12px; --af-e4: 16px;
+  --af-e5: 24px; --af-e6: 32px; --af-e7: 48px; --af-e8: 72px;
+
+  --af-marge-page: clamp(16px, 3.5vw, 48px);
+}
+
+/* --------------------------------------------------------------------------
+   2. BASE
+   -------------------------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body.af {
+  margin: 0;
+  background: var(--af-fond);
+  color: var(--af-encre);
+  font-family: var(--af-texte);
+  font-size: var(--af-t-corps);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+.af a { color: inherit; text-decoration: none; }
+
+/* Étiquette : le motif typographique récurrent du système. */
+.af-etiquette {
+  font-family: var(--af-texte);
+  font-size: var(--af-t-label);
+  font-weight: 700;
+  letter-spacing: var(--af-interlettre-large);
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   3. EN-TÊTE
+   -------------------------------------------------------------------------- */
+
+.af-entete {
+  padding: var(--af-e7) var(--af-marge-page) var(--af-e5);
+  border-bottom: var(--af-trait-epais) solid var(--af-encre);
+}
+
+.af-entete__date {
+  color: var(--af-encre-2);
+  font-size: var(--af-t-label);
+  font-weight: 700;
+  letter-spacing: var(--af-interlettre-large);
+  text-transform: uppercase;
+  margin-bottom: var(--af-e3);
+}
+
+.af-entete__titre {
+  font-family: var(--af-display);
+  font-size: var(--af-t-geant);
+  font-weight: 400;
+  line-height: .88;
+  letter-spacing: var(--af-interlettre-serre);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.af-entete__chapo {
+  color: var(--af-encre-2);
+  max-width: 58ch;
+  margin: var(--af-e4) 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. SECTION — le bandeau plein est le geste central du système
+   -------------------------------------------------------------------------- */
+
+.af-section { --af-teinte: var(--af-t1); --af-teinte-encre: #0a0a0c; }
+.af-section--1 { --af-teinte: var(--af-t1); --af-teinte-encre: var(--af-t1-encre); }
+.af-section--2 { --af-teinte: var(--af-t2); --af-teinte-encre: var(--af-t2-encre); }
+.af-section--3 { --af-teinte: var(--af-t3); --af-teinte-encre: var(--af-t3-encre); }
+.af-section--4 { --af-teinte: var(--af-t4); --af-teinte-encre: var(--af-t4-encre); }
+.af-section--5 { --af-teinte: var(--af-t5); --af-teinte-encre: var(--af-t5-encre); }
+.af-section--6 { --af-teinte: var(--af-t6); --af-teinte-encre: var(--af-t6-encre); }
+
+.af-section__bandeau {
+  background: var(--af-teinte);
+  color: var(--af-teinte-encre);
+  padding: var(--af-e3) var(--af-marge-page) var(--af-e4);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--af-e4);
+  flex-wrap: wrap;
+}
+
+/* Purement ornemental : le rang est déjà porté par l'ordre et par le nom.
+   C'est la seule chose du système qui a le droit d'être peu contrastée. */
+.af-section__numero {
+  font-family: var(--af-display);
+  font-size: var(--af-t-section);
+  line-height: .8;
+  opacity: .5;
+  font-weight: 400;
+}
+
+.af-section__nom {
+  font-family: var(--af-display);
+  font-size: var(--af-t-section);
+  font-weight: 400;
+  line-height: .82;
+  letter-spacing: var(--af-interlettre-serre);
+  text-transform: uppercase;
+  margin: 0;
+  flex: 0 1 auto;
+}
+
+/* Pas d'opacité ici : à 12px le seuil est de 4,5:1, et 0.8 d'opacité fait
+   tomber la teinte verte à 3,71:1. L'atténuation se fait par la graisse et
+   la taille, jamais par la transparence.
+   Le min-width force le passage à la ligne plutôt que l'écrasement quand le
+   nom de catégorie est long. */
+.af-section__sous {
+  font-size: var(--af-t-label);
+  font-weight: 600;
+  letter-spacing: .04em;
+  padding-bottom: 5px;
+  margin-left: auto;
+  text-align: right;
+  min-width: 22ch;
+  max-width: 40ch;
+}
+
+.af-section__corps { padding: var(--af-e5) var(--af-marge-page) var(--af-e7); }
+
+/* --------------------------------------------------------------------------
+   5. GRILLE ET FICHES
+   -------------------------------------------------------------------------- */
+
+.af-grille {
+  display: grid;
+  gap: var(--af-e4);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.af-fiche {
+  background: var(--af-relief);
+  border: var(--af-trait-fin) solid var(--af-trait);
+  border-top: var(--af-trait-epais) solid var(--af-teinte);
+  border-radius: var(--af-rayon);
+  display: flex;
+  flex-direction: column;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.af-fiche:hover,
+.af-fiche:focus-visible {
+  background: var(--af-relief-haut);
+  transform: translate(calc(var(--af-decalage) * -.5), calc(var(--af-decalage) * -.5));
+  box-shadow: var(--af-decalage) var(--af-decalage) 0 var(--af-teinte);
+  outline: none;
+}
+
+.af-fiche__image { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.af-fiche__image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Étiquette de créneau : aplat de teinte, encre calculée. */
+.af-fiche__creneau {
+  position: absolute; top: 0; left: 0;
+  background: var(--af-teinte);
+  color: var(--af-teinte-encre);
+  font-size: var(--af-t-label);
+  font-weight: 700;
+  letter-spacing: var(--af-interlettre-large);
+  text-transform: uppercase;
+  padding: 5px var(--af-e3) 4px;
+}
+
+/* La durée est une information de premier plan : c'est par elle qu'on choisit.
+   Elle est traitée comme un chiffre d'affiche, pas comme une métadonnée. */
+.af-fiche__duree {
+  position: absolute; right: var(--af-e3); bottom: 2px;
+  font-family: var(--af-display);
+  font-size: var(--af-t-duree);
+  line-height: 1;
+  color: var(--af-encre);
+  text-transform: uppercase;
+  text-shadow: 0 2px 14px rgba(0,0,0,.95), 0 0 4px rgba(0,0,0,.9);
+}
+.af-fiche__duree small { font-size: .45em; letter-spacing: .06em; margin-left: 2px; }
+
+.af-fiche__corps {
+  padding: var(--af-e3) var(--af-e3) var(--af-e3);
+  display: flex; flex-direction: column; gap: var(--af-e2); flex: 1;
+}
+
+/* Titre d'élément : casse d'origine obligatoire. Les métadonnées YouTube
+   doivent rester non modifiées — pas de text-transform ici. */
+.af-fiche__titre {
+  font-size: var(--af-t-titre);
+  font-weight: 700;
+  line-height: 1.24;
+  letter-spacing: -.005em;
+  margin: 0;
+}
+
+.af-fiche__source { color: var(--af-encre-2); font-size: 12.5px; font-weight: 500; }
+
+.af-fiche__signaux {
+  margin-top: auto; padding-top: var(--af-e3);
+  border-top: var(--af-trait-fin) solid var(--af-trait);
+  display: flex; flex-wrap: wrap; gap: var(--af-e1);
+}
+
+/* Petit texte : jamais de teinte — à 11px le seuil est 4,5:1 et la plupart
+   des teintes échouent sur le fond. L'emphase passe par la graisse. */
+.af-puce {
+  font-size: var(--af-t-micro);
+  color: var(--af-encre-2);
+  background: var(--af-relief-haut);
+  padding: 3px var(--af-e2);
+  font-weight: 500;
+}
+.af-puce--fort { color: var(--af-encre); font-weight: 700; background: #262630; }
+.af-puce--faible { color: var(--af-encre-3); font-style: italic; }
+
+.af-vide {
+  border: var(--af-trait-fin) dashed var(--af-trait);
+  border-top: var(--af-trait-epais) solid var(--af-teinte);
+  min-height: 150px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--af-e1); text-align: center; padding: var(--af-e4);
+  color: var(--af-encre-3);
+}
+.af-vide__creneau {
+  font-size: var(--af-t-label); font-weight: 700;
+  letter-spacing: var(--af-interlettre-large); text-transform: uppercase;
+  color: var(--af-encre-3);
+}
+
+/* --------------------------------------------------------------------------
+   6. PIED
+   -------------------------------------------------------------------------- */
+
+.af-pied {
+  padding: var(--af-e5) var(--af-marge-page) var(--af-e8);
+  border-top: var(--af-trait-fin) solid var(--af-trait);
+  color: var(--af-encre-3);
+  font-size: var(--af-t-micro);
+  max-width: 90ch;
+}
+
+/* --------------------------------------------------------------------------
+   7. PRÉFÉRENCES UTILISATEUR
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .af-fiche { transition: none; }
+  .af-fiche:hover, .af-fiche:focus-visible { transform: none; }
+}
+
+@media print {
+  body.af { background: #fff; color: #000; }
+  .af-fiche { border-color: #000; }
+}

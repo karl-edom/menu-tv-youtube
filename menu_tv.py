@@ -36,6 +36,7 @@ import sys
 import unicodedata
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
+from difflib import SequenceMatcher
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -59,6 +60,10 @@ NS = {
 # Configuration de la grille
 # --------------------------------------------------------------------------- #
 
+# L'identité visuelle vit entièrement dans theme/theme.css. Ici on ne manipule
+# que des rôles : chaque intention reçoit un rang, qui devient une classe
+# `af-section--N`. Aucune couleur, aucune taille dans ce fichier — pour changer
+# l'apparence, on remplace la feuille, pas le programme.
 INTENTIONS = [
     ("apprendre", "Apprendre", "Comprendre un mécanisme, acquérir une notion."),
     ("monde", "Comprendre le monde", "Économie, géopolitique, société, enquête."),
@@ -70,7 +75,7 @@ INTENTIONS = [
 
 # (clé, libellé, borne basse en minutes, borne haute)
 CRENEAUX = [
-    ("cafe", "Café", 4, 12),
+    ("cafe", "Café", 3, 12),
     ("pause", "Pause", 12, 30),
     ("soiree", "Soirée", 30, 75),
     ("long", "Long cours", 75, 100_000),
@@ -78,6 +83,10 @@ CRENEAUX = [
 
 # Fenêtre de candidature : au-delà, une vidéo n'est plus "à l'affiche".
 FENETRE_JOURS = 21
+# Fenêtre de rattrapage, utilisée uniquement pour les cases qui resteraient
+# vides. Mieux vaut une bonne vidéo d'il y a six semaines qu'une case morte —
+# les créneaux longs et les intentions peu dotées publient lentement.
+FENETRE_SECOURS = 75
 # Une chaîne déjà proposée dans les N derniers jours est fortement pénalisée.
 QUARANTAINE_CHAINE_JOURS = 10
 # Durée de mémoire du déjà-proposé, en jours. Au-delà, une vidéo peut revenir.
@@ -112,6 +121,7 @@ class Video:
     intention: str = ""
     langue: str = ""
     score: float = 0.0
+    rattrapage: bool = False
     detail: dict = field(default_factory=dict)
 
     @property
@@ -177,22 +187,80 @@ class Api:
         return r.json()
 
 
-def resoudre_handles(api: Api, chaines: list[dict]) -> tuple[dict, list[str]]:
-    """@handle -> channel_id. Résolu une seule fois, puis mis en cache."""
+def normaliser(s: str) -> str:
+    s = unicodedata.normalize("NFD", s.lower())
+    return "".join(c for c in s if c.isalnum())
+
+
+def chercher_chaine(api: Api, handle: str) -> dict | None:
+    """Repli quand le handle est faux : recherche par nom.
+
+    Coûte 100 unités, mais une seule fois par handle grâce au cache. On exige
+    une ressemblance forte entre le nom trouvé et le handle demandé, sinon on
+    préfère ne rien lier — une mauvaise chaîne liée en silence serait pire
+    qu'une chaîne manquante.
+    """
+    requete = re.sub(r"[-_]", " ", handle.lstrip("@"))
+    requete = re.sub(r"(?i)\b(officiel|official|channel|tv)\b$", "", requete).strip()
+    rep = api.get(
+        "search", cout=100, part="snippet", type="channel", q=requete, maxResults=5
+    )
+    cible = normaliser(requete)
+    meilleur, meilleur_score = None, 0.0
+    for it in rep.get("items", []):
+        sn = it["snippet"]
+        nom = sn.get("title", "")
+        cid = sn.get("channelId") or it.get("id", {}).get("channelId")
+        if not cid:
+            continue
+        score = SequenceMatcher(None, cible, normaliser(nom)).ratio()
+        if score > meilleur_score:
+            meilleur, meilleur_score = {"id": cid, "nom": nom}, score
+    if meilleur and meilleur_score >= 0.70:
+        meilleur["resolu_par_recherche"] = True
+        meilleur["ressemblance"] = round(meilleur_score, 2)
+        return meilleur
+    return None
+
+
+def resoudre_handles(api: Api, chaines: list[dict]):
+    """@handle -> channel_id. Résolu une fois, puis mis en cache.
+
+    Les échecs sont eux aussi mis en cache, avec leur date : sans ça, chaque
+    handle mort relancerait une recherche à 100 unités tous les jours.
+    """
     cache = charger_json("channels.json", {})
-    echecs = []
+    maintenant = datetime.now(timezone.utc)
+    echecs, secours = [], []
+
     for c in chaines:
         h = c["handle"]
-        if h in cache:
+        entree = cache.get(h)
+
+        if entree and entree.get("id"):
             continue
+        if entree and entree.get("echec"):
+            depuis = (maintenant - datetime.fromisoformat(entree["date"])).days
+            if depuis < 30:          # on ne réessaie qu'une fois par mois
+                echecs.append(h)
+                continue
+
         rep = api.get("channels", part="snippet", forHandle=h.lstrip("@"))
         items = rep.get("items") or []
-        if not items:
-            echecs.append(h)
+        if items:
+            cache[h] = {"id": items[0]["id"], "nom": items[0]["snippet"]["title"]}
             continue
-        cache[h] = {"id": items[0]["id"], "nom": items[0]["snippet"]["title"]}
+
+        trouve = chercher_chaine(api, h)
+        if trouve:
+            cache[h] = trouve
+            secours.append((h, trouve["nom"], trouve["ressemblance"]))
+        else:
+            cache[h] = {"echec": True, "date": maintenant.isoformat()}
+            echecs.append(h)
+
     ecrire_json("channels.json", cache)
-    return cache, echecs
+    return cache, echecs, secours
 
 
 def lire_rss(chaine_id: str) -> list[dict]:
@@ -382,7 +450,11 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
     def rarete(cellule):
         inten, cren = cellule
         return sum(
-            1 for v in retenus if v.intention == inten and creneau_de(v.duree_s) == cren
+            1
+            for v in retenus
+            if v.intention == inten
+            and creneau_de(v.duree_s) == cren
+            and v.age_jours <= FENETRE_JOURS
         )
 
     for inten, cren in sorted(cellules, key=rarete):
@@ -393,12 +465,44 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
             and creneau_de(v.duree_s) == cren
             and v.chaine_id not in chaines_utilisees
         ]
-        if pool:
-            gagnant = max(pool, key=lambda v: v.score)
-            grille[(inten, cren)] = gagnant
-            chaines_utilisees.add(gagnant.chaine_id)
+        if not pool:
+            continue
+        # Priorité absolue à la fenêtre courte. On n'élargit que si la case
+        # serait vide sans ça.
+        frais = [v for v in pool if v.age_jours <= FENETRE_JOURS]
+        choix = frais or pool
+        gagnant = max(choix, key=lambda v: v.score)
+        gagnant.rattrapage = not frais
+        grille[(inten, cren)] = gagnant
+        chaines_utilisees.add(gagnant.chaine_id)
 
     return grille
+
+
+def diagnostic(candidats: list[Video]) -> str:
+    """Où sont les trous ? Sans ça, on corrige à l'aveugle."""
+    lignes = [
+        "  intention           " + "".join(f"{c[1]:>12}" for c in CRENEAUX),
+    ]
+    for cle, libelle, *_ in INTENTIONS:
+        cases = []
+        for c_cle, *_ in CRENEAUX:
+            recents = sum(
+                1
+                for v in candidats
+                if v.intention == cle
+                and creneau_de(v.duree_s) == c_cle
+                and v.age_jours <= FENETRE_JOURS
+            )
+            total = sum(
+                1
+                for v in candidats
+                if v.intention == cle and creneau_de(v.duree_s) == c_cle
+            )
+            cases.append(f"{recents:>7} /{total:>3}")
+        lignes.append(f"  {libelle:<20}" + "".join(f"{c:>12}" for c in cases))
+    lignes.append("  (récents dans la fenêtre / total avec rattrapage)")
+    return "\n".join(lignes)
 
 
 # --------------------------------------------------------------------------- #
@@ -409,68 +513,34 @@ GABARIT = """<!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Menu TV — {date}</title>
-<style>
-  :root {{
-    --fond:#0d0f13; --carte:#161a21; --bord:#242a35;
-    --texte:#e8eaee; --doux:#8b93a3; --accent:#d9a441;
-  }}
-  * {{ box-sizing:border-box; }}
-  body {{ margin:0; background:var(--fond); color:var(--texte);
-         font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }}
-  header {{ padding:34px 28px 10px; border-bottom:1px solid var(--bord); }}
-  h1 {{ margin:0; font-size:26px; letter-spacing:-.02em; font-weight:650; }}
-  .date {{ color:var(--accent); font-size:13px; text-transform:uppercase;
-           letter-spacing:.14em; margin-bottom:8px; }}
-  .chapo {{ color:var(--doux); font-size:14px; margin:8px 0 0; max-width:64ch; }}
-  main {{ padding:22px 28px 60px; }}
-  .bloc {{ margin-bottom:34px; }}
-  .titre-bloc {{ display:flex; align-items:baseline; gap:12px; margin-bottom:4px; }}
-  .titre-bloc h2 {{ font-size:17px; margin:0; font-weight:620; }}
-  .titre-bloc span {{ color:var(--doux); font-size:13px; }}
-  .rangee {{ display:grid; gap:14px; margin-top:12px;
-             grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); }}
-  .carte {{ background:var(--carte); border:1px solid var(--bord); border-radius:10px;
-            overflow:hidden; text-decoration:none; color:inherit; display:flex;
-            flex-direction:column; transition:border-color .15s,transform .15s; }}
-  .carte:hover {{ border-color:var(--accent); transform:translateY(-2px); }}
-  .vignette {{ position:relative; aspect-ratio:16/9; background:#000; }}
-  .vignette img {{ width:100%; height:100%; object-fit:cover; display:block; }}
-  .creneau {{ position:absolute; top:8px; left:8px; background:rgba(13,15,19,.9);
-              color:var(--accent); font-size:11px; letter-spacing:.1em;
-              text-transform:uppercase; padding:3px 8px; border-radius:4px; }}
-  .duree {{ position:absolute; bottom:8px; right:8px; background:rgba(13,15,19,.9);
-            font-size:12px; padding:2px 6px; border-radius:4px; }}
-  .corps {{ padding:12px 13px 13px; display:flex; flex-direction:column; gap:6px;
-            flex:1; }}
-  .corps h3 {{ margin:0; font-size:14.5px; line-height:1.35; font-weight:580; }}
-  .chaine {{ color:var(--doux); font-size:12.5px; }}
-  .signaux {{ margin-top:auto; padding-top:9px; border-top:1px solid var(--bord);
-              display:flex; flex-wrap:wrap; gap:5px; }}
-  .puce {{ font-size:11px; color:var(--doux); background:#1d222b;
-           padding:2px 7px; border-radius:99px; }}
-  .puce.fort {{ color:var(--accent); }}
-  .vide {{ background:transparent; border:1px dashed var(--bord); border-radius:10px;
-           min-height:120px; display:flex; align-items:center; justify-content:center;
-           color:#4a5261; font-size:12.5px; text-align:center; padding:16px; }}
-  footer {{ padding:20px 28px 40px; color:#5a6272; font-size:12px;
-            border-top:1px solid var(--bord); }}
-</style></head><body>
-<header>
-  <div class="date">{date_longue}</div>
-  <h1>Menu TV</h1>
-  <p class="chapo">{nb} propositions pour aujourd'hui, une par case. Rien de plus.
-     Ce qui a déjà été proposé ne reviendra pas avant {memoire} jours.</p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="theme.css">
+</head><body class="af">
+<header class="af-entete">
+  <div class="af-entete__date">{date_longue}</div>
+  <h1 class="af-entete__titre">Menu TV</h1>
+  <p class="af-entete__chapo">{nb} propositions pour aujourd'hui, une par case.
+     Rien de plus. Ce qui a déjà été proposé ne reviendra pas avant {memoire} jours.</p>
 </header>
-<main>
-{blocs}
-</main>
-<footer>
-  {nb_candidats} vidéos examinées sur {nb_chaines} chaînes · {unites} unités de quota consommées ·
-  sélection sur signaux objectifs (sur-performance relative à la chaîne, réception, fraîcheur),
-  sans intervention éditoriale.
+{sections}
+<footer class="af-pied">
+  {nb_candidats} vidéos examinées sur {nb_chaines} chaînes · {unites} unités de quota
+  consommées · sélection sur signaux objectifs — sur-performance relative à la chaîne,
+  réception, fraîcheur — sans intervention éditoriale.
 </footer>
 </body></html>
 """
+
+
+def decouper_duree(v: "Video") -> str:
+    """Sépare le nombre de son unité : l'unité est composée plus petite."""
+    h, reste = divmod(v.duree_s, 3600)
+    m, _ = divmod(reste, 60)
+    if h:
+        return f'{h}<small>H</small>{m:02d}'
+    return f'{m}<small>MIN</small>'
 
 
 def rendre(grille: dict, stats: dict) -> str:
@@ -482,42 +552,59 @@ def rendre(grille: dict, stats: dict) -> str:
         f"{jours[maintenant.weekday()]} {maintenant.day} {mois[maintenant.month - 1]}"
     )
 
-    libelle_creneau = {c[0]: c[1] for c in CRENEAUX}
-    blocs = []
-    for cle, libelle, desc in INTENTIONS:
-        cartes = []
+    sections = []
+    for rang, (cle, libelle, desc) in enumerate(INTENTIONS, start=1):
+        fiches = []
         for c_cle, c_lib, bas, haut in CRENEAUX:
             v = grille.get((cle, c_cle))
             if not v:
-                cartes.append(
-                    f'<div class="vide">{c_lib}<br>rien de neuf</div>'
+                fiches.append(
+                    f'<div class="af-vide">'
+                    f'<span class="af-vide__creneau">{c_lib}</span>'
+                    f"<span>rien de neuf</span></div>"
                 )
                 continue
+
             d = v.detail
             puces = [
-                f'<span class="puce{" fort" if d["surperformance"] >= 1.5 else ""}">'
+                f'<span class="af-puce'
+                f'{" af-puce--fort" if d["surperformance"] >= 1.5 else ""}">'
                 f'×{d["surperformance"]:.1f} vs sa moyenne</span>',
-                f'<span class="puce">{v.vues:,}'.replace(",", " ") + " vues</span>",
-                f'<span class="puce">{d["age_jours"]:.0f} j</span>',
+                '<span class="af-puce">'
+                + f'{v.vues:,}'.replace(",", " ")
+                + " vues</span>",
+                f'<span class="af-puce">{d["age_jours"]:.0f} j</span>',
             ]
-            cartes.append(
-                f"""<a class="carte" href="{v.url}" target="_blank" rel="noopener">
-  <div class="vignette">
-    <img src="{v.miniature}" alt="" loading="lazy">
-    <span class="creneau">{c_lib}</span>
-    <span class="duree">{v.duree_lisible}</span>
-  </div>
-  <div class="corps">
-    <h3>{escape(v.titre)}</h3>
-    <div class="chaine">{escape(v.chaine_nom)}</div>
-    <div class="signaux">{''.join(puces)}</div>
-  </div>
-</a>"""
+            if v.rattrapage:
+                puces.append('<span class="af-puce af-puce--faible">rattrapage</span>')
+
+            # Le titre garde sa casse d'origine : les métadonnées YouTube doivent
+            # être affichées non modifiées. Les capitales sont réservées à nos
+            # propres libellés.
+            fiches.append(
+                f'<a class="af-fiche" href="{v.url}" target="_blank" rel="noopener">'
+                f'<div class="af-fiche__image">'
+                f'<img src="{v.miniature}" alt="" loading="lazy">'
+                f'<span class="af-fiche__creneau">{c_lib}</span>'
+                f'<span class="af-fiche__duree">{decouper_duree(v)}</span>'
+                f"</div>"
+                f'<div class="af-fiche__corps">'
+                f'<h3 class="af-fiche__titre">{escape(v.titre)}</h3>'
+                f'<div class="af-fiche__source">{escape(v.chaine_nom)}</div>'
+                f'<div class="af-fiche__signaux">{"".join(puces)}</div>'
+                f"</div></a>"
             )
-        blocs.append(
-            f'<section class="bloc"><div class="titre-bloc"><h2>{libelle}</h2>'
-            f"<span>{desc}</span></div>"
-            f'<div class="rangee">{"".join(cartes)}</div></section>'
+
+        sections.append(
+            f'<section class="af-section af-section--{rang}">'
+            f'<div class="af-section__bandeau">'
+            f'<span class="af-section__numero">{rang:02d}</span>'
+            f'<h2 class="af-section__nom">{libelle}</h2>'
+            f'<span class="af-section__sous">{desc}</span>'
+            f"</div>"
+            f'<div class="af-section__corps">'
+            f'<div class="af-grille">{"".join(fiches)}</div>'
+            f"</div></section>"
         )
 
     return GABARIT.format(
@@ -525,7 +612,7 @@ def rendre(grille: dict, stats: dict) -> str:
         date_longue=date_longue,
         nb=len(grille),
         memoire=MEMOIRE_JOURS,
-        blocs="\n".join(blocs),
+        sections="\n".join(sections),
         **stats,
     )
 
@@ -613,16 +700,24 @@ def main():
             sys.exit("YT_API_KEY manquante. Voir le README.")
         api = Api(cle)
 
-        cache, echecs = resoudre_handles(api, chaines)
+        cache, echecs, secours = resoudre_handles(api, chaines)
+        if secours:
+            print("↻ résolus par recherche — À VÉRIFIER :")
+            for h, nom, r in secours:
+                print(f"    {h:<28} → « {nom} »   (ressemblance {r})")
         if echecs:
-            print(f"⚠ handles non résolus, à corriger dans channels.yaml : {echecs}",
+            print(f"⚠ introuvables, à corriger dans channels.yaml ({len(echecs)}) :",
                   file=sys.stderr)
+            for h in echecs:
+                print(f"    {h}", file=sys.stderr)
 
+        actives = [
+            c for c in chaines if cache.get(c["handle"], {}).get("id")
+        ]
         par_chaine = {}
         with ThreadPoolExecutor(max_workers=12) as ex:
             futurs = {
-                ex.submit(lire_rss, cache[c["handle"]]["id"]): c
-                for c in chaines if c["handle"] in cache
+                ex.submit(lire_rss, cache[c["handle"]]["id"]): c for c in actives
             }
             for f, c in futurs.items():
                 par_chaine[c["handle"]] = (c, f.result())
@@ -660,16 +755,38 @@ def main():
 
     candidats = [
         v for v in toutes
-        if v.age_jours <= FENETRE_JOURS
+        if v.age_jours <= FENETRE_SECOURS
         and v.duree_s >= DUREE_MIN_SECONDES
         and creneau_de(v.duree_s)
     ]
-    print(f"{len(candidats)} candidats dans la fenêtre de {FENETRE_JOURS} jours")
+    recents = sum(1 for v in candidats if v.age_jours <= FENETRE_JOURS)
+    ecartees = len(toutes) - len(candidats)
+    print(
+        f"{len(candidats)} candidats retenus ({recents} dans la fenêtre de "
+        f"{FENETRE_JOURS} j, le reste en rattrapage jusqu'à {FENETRE_SECOURS} j) · "
+        f"{ecartees} vidéos écartées (trop vieilles, trop courtes ou Shorts)"
+    )
+    print(diagnostic(candidats))
 
     grille = selectionner(candidats, histo_videos, histo_chaines)
-    print(f"{len(grille)} cases remplies sur {len(INTENTIONS) * len(CRENEAUX)}")
+    nb_rattrapage = sum(1 for v in grille.values() if v.rattrapage)
+    print(
+        f"{len(grille)} cases remplies sur {len(INTENTIONS) * len(CRENEAUX)}"
+        + (f" (dont {nb_rattrapage} en rattrapage)" if nb_rattrapage else "")
+    )
 
     SORTIE.mkdir(parents=True, exist_ok=True)
+    # L'identité est un fichier autonome : on le copie tel quel à côté de la
+    # page. Le remplacer suffit à changer l'apparence, sans retoucher ce code.
+    feuille = RACINE / "theme" / "theme.css"
+    if feuille.exists():
+        (SORTIE / "theme.css").write_text(
+            feuille.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+    else:
+        print("⚠ theme/theme.css introuvable — page sans mise en forme",
+              file=sys.stderr)
+
     html = rendre(grille, {
         "nb_candidats": len(candidats),
         "nb_chaines": len(par_cid),
