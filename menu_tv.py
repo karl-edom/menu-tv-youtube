@@ -33,6 +33,7 @@ import random
 import re
 import statistics
 import sys
+import time
 import unicodedata
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
@@ -331,15 +332,53 @@ def resoudre_handles(api: Api, chaines: list[dict]):
     return cache, echecs, secours, reportes
 
 
-def lire_rss(chaine_id: str) -> list[dict]:
-    """Flux public : pas de clé, pas de quota. Donne les ~15 dernières vidéos."""
-    try:
-        r = requests.get(RSS.format(chaine_id), timeout=20)
-        if r.status_code != 200:
-            return []
-        racine = ET.fromstring(r.content)
-    except Exception:
-        return []
+# YouTube refuse les requêtes sans en-tête de navigateur, et se méfie des
+# rafales venant d'une IP de centre de données — ce qui est exactement le cas
+# d'un runner GitHub. Sans ça, les flux reviennent vides sans le moindre signe.
+ENTETES_RSS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+    ),
+    "Accept": "application/atom+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "fr,en;q=0.8",
+}
+SESSION_RSS = requests.Session()
+
+
+def lire_rss(chaine_id: str, essais: int = 3) -> tuple[list[dict], str | None]:
+    """Flux public : pas de clé, pas de quota.
+
+    Renvoie (vidéos, erreur). L'erreur n'est JAMAIS avalée : une collecte qui
+    échoue en silence produit une grille vide sans rien dire, et on cherche le
+    bug pendant des heures du mauvais côté.
+    """
+    derniere = None
+    for tentative in range(essais):
+        try:
+            r = SESSION_RSS.get(
+                RSS.format(chaine_id), headers=ENTETES_RSS, timeout=20
+            )
+        except Exception as e:
+            derniere = f"réseau {type(e).__name__}"
+            time.sleep(1.5 * (tentative + 1) + random.random())
+            continue
+
+        if r.status_code == 200:
+            try:
+                racine = ET.fromstring(r.content)
+            except ET.ParseError:
+                return [], "XML illisible"
+            break
+
+        # 429 = trop de requêtes, 5xx = incident passager : on réessaie.
+        if r.status_code in (429, 500, 502, 503, 504):
+            derniere = f"HTTP {r.status_code}"
+            time.sleep(2.0 * (tentative + 1) + random.random() * 1.5)
+            continue
+        return [], f"HTTP {r.status_code}"
+    else:
+        return [], derniere or "épuisé"
 
     out = []
     for e in racine.findall("atom:entry", NS):
@@ -355,7 +394,7 @@ def lire_rss(chaine_id: str) -> list[dict]:
                 "publie_le": datetime.fromisoformat(publie.replace("Z", "+00:00")),
             }
         )
-    return out
+    return out, None
 
 
 def parser_duree_iso(d: str) -> int:
@@ -926,13 +965,32 @@ def main():
              "handle": c["handle"], "intention": c["intention"], "langue": c["langue"]}
             for c in actives
         ]
-        par_chaine = {}
-        with ThreadPoolExecutor(max_workers=12) as ex:
+        # 6 au lieu de 12 : au-delà, YouTube commence à refuser les flux.
+        par_chaine, flux_rates = {}, []
+        with ThreadPoolExecutor(max_workers=6) as ex:
             futurs = {
                 ex.submit(lire_rss, cache[c["handle"]]["id"]): c for c in actives
             }
             for f, c in futurs.items():
-                par_chaine[c["handle"]] = (c, f.result())
+                entrees, erreur = f.result()
+                if erreur:
+                    flux_rates.append((c["handle"], erreur))
+                par_chaine[c["handle"]] = (c, entrees)
+
+        lus = len(actives) - len(flux_rates)
+        print(f"— flux RSS : {lus}/{len(actives)} lus")
+        if flux_rates:
+            from collections import Counter
+            motifs = Counter(e for _, e in flux_rates)
+            print(f"  {len(flux_rates)} échecs : "
+                  + ", ".join(f"{m} ×{n}" for m, n in motifs.most_common()),
+                  file=sys.stderr)
+            for h, e in flux_rates[:8]:
+                print(f"    {h} — {e}", file=sys.stderr)
+        if lus < len(actives) * 0.5:
+            print("⚠ plus de la moitié des flux ont échoué : la grille sera "
+                  "creuse, et ce n'est PAS un problème de channels.yaml.",
+                  file=sys.stderr)
 
         toutes, a_enrichir = [], []
         for handle, (c, entrees) in par_chaine.items():
