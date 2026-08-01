@@ -31,20 +31,28 @@
 
   /* — Teintes catégorielles ————————————————————————————————————
      L'ORDRE EST LE MÉCANISME DE SÉPARATION DALTONISME, PAS UN CHOIX
-     ESTHÉTIQUE. Palette validée (bande de clarté OKLCH, plancher de chroma,
-     ΔE protan/deutan sur paires adjacentes, contraste ≥ 3:1 sur les deux
-     surfaces sombres). Ne pas réordonner, ne pas substituer une teinte
-     isolée sans revalider l'ensemble.
+     ESTHÉTIQUE. Dix teintes : les huit de la palette de référence, plus deux
+     ajoutées, et un ordre trouvé par recherche sous double contrainte —
+     ΔE deutan/protan ≥ 8 sur chaque paire adjacente, et ΔE en vision normale
+     ≥ 15. Le jeu retenu tient 9,4 et 19,3.
+
+     Validé sur les DEUX surfaces sombres (#08080a et #101015) : bande de
+     clarté OKLCH, plancher de chroma, séparation daltonisme, contraste.
+     Ne pas réordonner, ne pas substituer une teinte isolée : la garantie
+     porte sur la suite entière, pas sur les couleurs prises séparément.
 
      Chaque teinte porte son encre : le texte posé SUR l'aplat doit atteindre
-     4,5:1. Cinq teintes veulent du noir, la verte du blanc — c'est mesuré,
-     pas arbitraire. */
-  --af-t1:            #3987e5;  --af-t1-encre: #0a0a0c;  /* 5.44:1 */
-  --af-t2:            #d95926;  --af-t2-encre: #0a0a0c;  /* 5.09:1 */
-  --af-t3:            #199e70;  --af-t3-encre: #0a0a0c;  /* 5.81:1 */
-  --af-t4:            #c98500;  --af-t4-encre: #0a0a0c;  /* 6.44:1 */
-  --af-t5:            #d55181;  --af-t5-encre: #0a0a0c;  /* 5.01:1 */
-  --af-t6:            #008300;  --af-t6-encre: #ffffff;  /* 4.95:1 */
+     4,5:1. Huit veulent du noir, deux du blanc — c'est calculé, pas choisi. */
+  --af-t1:  #d95926;  --af-t1-encre:  #0a0a0c;  /* orange   5.09:1 */
+  --af-t2:  #199e70;  --af-t2-encre:  #0a0a0c;  /* aqua     5.81:1 */
+  --af-t3:  #a901e6;  --af-t3-encre:  #ffffff;  /* violet   5.48:1 */
+  --af-t4:  #c98500;  --af-t4-encre:  #0a0a0c;  /* jaune    6.44:1 */
+  --af-t5:  #d55181;  --af-t5-encre:  #0a0a0c;  /* magenta  5.01:1 */
+  --af-t6:  #8c9510;  --af-t6-encre:  #0a0a0c;  /* olive    6.05:1 */
+  --af-t7:  #9085e9;  --af-t7-encre:  #0a0a0c;  /* lavande  6.33:1 */
+  --af-t8:  #008300;  --af-t8-encre:  #ffffff;  /* vert     4.95:1 */
+  --af-t9:  #3987e5;  --af-t9-encre:  #0a0a0c;  /* bleu     5.44:1 */
+  --af-t10: #e66767;  --af-t10-encre: #0a0a0c;  /* rouge    6.12:1 */
 
   /* — Typographie ——————————————————————————————————————————————
      Deux familles, deux rôles. La display ne sert JAMAIS au texte courant :
@@ -146,13 +154,17 @@ body.af {
    4. SECTION — le bandeau plein est le geste central du système
    -------------------------------------------------------------------------- */
 
-.af-section { --af-teinte: var(--af-t1); --af-teinte-encre: #0a0a0c; }
+.af-section { --af-teinte: var(--af-t1); --af-teinte-encre: var(--af-t1-encre); }
 .af-section--1 { --af-teinte: var(--af-t1); --af-teinte-encre: var(--af-t1-encre); }
 .af-section--2 { --af-teinte: var(--af-t2); --af-teinte-encre: var(--af-t2-encre); }
 .af-section--3 { --af-teinte: var(--af-t3); --af-teinte-encre: var(--af-t3-encre); }
 .af-section--4 { --af-teinte: var(--af-t4); --af-teinte-encre: var(--af-t4-encre); }
 .af-section--5 { --af-teinte: var(--af-t5); --af-teinte-encre: var(--af-t5-encre); }
 .af-section--6 { --af-teinte: var(--af-t6); --af-teinte-encre: var(--af-t6-encre); }
+.af-section--7 { --af-teinte: var(--af-t7); --af-teinte-encre: var(--af-t7-encre); }
+.af-section--8 { --af-teinte: var(--af-t8); --af-teinte-encre: var(--af-t8-encre); }
+.af-section--9 { --af-teinte: var(--af-t9); --af-teinte-encre: var(--af-t9-encre); }
+.af-section--10 { --af-teinte: var(--af-t10); --af-teinte-encre: var(--af-t10-encre); }
 
 .af-section__bandeau {
   background: var(--af-teinte);
@@ -445,3 +457,7 @@ body.af {
   body.af { background: #fff; color: #000; }
   .af-fiche { border-color: #000; }
 }
+
+/* Deux colonnes pour la liste des catégories : dix lignes en colonne unique
+   allongent inutilement le panneau. */
+.af-colonnes-2 { columns: 200px 2; column-gap: var(--af-e5); }

@@ -1,112 +1,179 @@
 # =============================================================================
-# Liste de départ des chaînes de référence.
+# Les chaînes de référence. Le seul fichier éditorial.
 #
-# C'est le SEUL fichier à maintenir à la main. Tout le reste en découle.
+#   handle    : le @identifiant YouTube (visible dans l'URL de la chaîne)
+#   intention : voir la liste ci-dessous
+#   langue    : fr | en
 #
-# - handle    : le @identifiant YouTube (visible sur l'URL de la chaîne)
-# - intention : apprendre | monde | emerveiller | culture | faire | detente
-# - langue    : fr | en
+# LES DIX INTENTIONS, ET LE TEST QUI TRANCHE
+# Une seule question : qu'est-ce qu'il te reste après ?
 #
-# Les handles sont résolus une fois en channel_id et mis en cache dans
-# state/channels.json. Ceux qui échouent sont signalés dans le rapport de run :
-# corrige-les ici, ne touche pas au cache.
+#   comprendre  un mécanisme      « ça marche comment ? » — intemporel
+#   monde       une situation     « pourquoi c'est comme ça ? » — daté, situé
+#   oeuvres     une rencontre     ça parle d'une œuvre, d'un auteur, d'un courant
+#   recit       une histoire      il y a un début, un milieu, une fin
+#   faire       un savoir-faire   un geste que tu pourrais reproduire
+#   regarder    une image         la valeur est dans ce qu'on voit, pas ce qu'on apprend
+#   ecouter     une conversation  quelqu'un déroule une pensée en temps réel
+#   jouer       une partie        jeu vidéo, jeu de société, compétition
+#   bouger      un corps          sport, performance physique
+#   rire        un moment léger   l'objectif déclaré est de faire rire
 #
-# Cette liste est un point de départ à corriger — elle reflète mes suppositions,
-# pas tes goûts. Ajoute, supprime, reclasse librement.
+# En cas d'hésitation entre deux, demande-toi ce que tu raconterais à quelqu'un
+# le lendemain. Si c'est « j'ai appris que », c'est comprendre ou monde. Si c'est
+# « il y a une histoire de », c'est recit. Si c'est « tu devrais voir ça »,
+# c'est regarder.
+#
+# ATTENTION : cette liste est une PROPOSITION, pas une recommandation validée.
+# Les handles sortent de ma mémoire. Ceux qui échouent sont signalés au premier
+# run, avec un repli par recherche dont les résultats sont à vérifier.
 # =============================================================================
 
 chaines:
 
-  # ---------------------------------------------------------------- APPRENDRE
-  # Sciences dures, mathématiques, ingénierie, vulgarisation exigeante.
-  - {handle: "@ScienceEtonnante",     intention: apprendre,   langue: fr}
-  - {handle: "@DirtyBiology",         intention: apprendre,   langue: fr}
-  - {handle: "@LeReveilleur",         intention: apprendre,   langue: fr}
-  - {handle: "@Astronogeek",          intention: apprendre,   langue: fr}
-  - {handle: "@BaladeMentale",        intention: apprendre,   langue: fr}
-  - {handle: "@PasseScience",         intention: apprendre,   langue: fr}
-  - {handle: "@Fouloscopie",          intention: apprendre,   langue: fr}
-  - {handle: "@HygieneMentale",       intention: apprendre,   langue: fr}
-  - {handle: "@veritasium",           intention: apprendre,   langue: en}
-  - {handle: "@kurzgesagt",           intention: apprendre,   langue: en}
-  - {handle: "@3blue1brown",          intention: apprendre,   langue: en}
-  - {handle: "@SmarterEveryDay",      intention: apprendre,   langue: en}
-  - {handle: "@Vsauce",               intention: apprendre,   langue: en}
-  - {handle: "@sixtysymbols",         intention: apprendre,   langue: en}
-  - {handle: "@numberphile",          intention: apprendre,   langue: en}
-  - {handle: "@AppliedScience",       intention: apprendre,   langue: en}
-  - {handle: "@BranchEducation",      intention: apprendre,   langue: en}
-  - {handle: "@Mathologer",           intention: apprendre,   langue: en}
+  # ------------------------------------------------------------- COMPRENDRE
+  # Mécanismes, sciences, mathématiques, technique. Intemporel.
+  - {handle: "@ScienceEtonnante",       intention: comprendre, langue: fr}
+  - {handle: "@DirtyBiology",           intention: comprendre, langue: fr}
+  - {handle: "@LeReveilleur",           intention: comprendre, langue: fr}
+  - {handle: "@Astronogeek",            intention: comprendre, langue: fr}
+  - {handle: "@BaladeMentale",          intention: comprendre, langue: fr}
+  - {handle: "@PasseScience",           intention: comprendre, langue: fr}
+  - {handle: "@Fouloscopie",            intention: comprendre, langue: fr}
+  - {handle: "@HygieneMentale",         intention: comprendre, langue: fr}
+  - {handle: "@Underscore_",            intention: comprendre, langue: fr}
+  - {handle: "@Scilabus",               intention: comprendre, langue: fr}
+  - {handle: "@ExperimentBoy",          intention: comprendre, langue: fr}
+  - {handle: "@veritasium",             intention: comprendre, langue: en}
+  - {handle: "@kurzgesagt",             intention: comprendre, langue: en}
+  - {handle: "@3blue1brown",            intention: comprendre, langue: en}
+  - {handle: "@SmarterEveryDay",        intention: comprendre, langue: en}
+  - {handle: "@Vsauce",                 intention: comprendre, langue: en}
+  - {handle: "@sixtysymbols",           intention: comprendre, langue: en}
+  - {handle: "@numberphile",            intention: comprendre, langue: en}
+  - {handle: "@AppliedScience",         intention: comprendre, langue: en}
+  - {handle: "@BranchEducation",        intention: comprendre, langue: en}
+  - {handle: "@Mathologer",             intention: comprendre, langue: en}
+  - {handle: "@PracticalEngineeringChannel", intention: comprendre, langue: en}
+  - {handle: "@TechnologyConnections",  intention: comprendre, langue: en}
+  - {handle: "@NativLang",              intention: comprendre, langue: en}
+  - {handle: "@Steve Mould",            intention: comprendre, langue: en}
 
-  # ------------------------------------------------------- COMPRENDRE LE MONDE
-  # Géopolitique, économie, enquêtes, société, systèmes.
-  - {handle: "@Heu7reka",             intention: monde,       langue: fr}
-  - {handle: "@StupidEconomics",      intention: monde,       langue: fr}
-  - {handle: "@OsonsCauser",          intention: monde,       langue: fr}
-  - {handle: "@datagueule",           intention: monde,       langue: fr}
-  - {handle: "@LesRevueursOfficiel",  intention: monde,       langue: fr}
-  - {handle: "@blast-info",           intention: monde,       langue: fr}
-  - {handle: "@Johnnyharris",         intention: monde,       langue: en}
-  - {handle: "@Wendoverproductions",  intention: monde,       langue: en}
-  - {handle: "@RealLifeLore",         intention: monde,       langue: en}
-  - {handle: "@PolyMatter",           intention: monde,       langue: en}
-  - {handle: "@CGPGrey",              intention: monde,       langue: en}
-  - {handle: "@Vox",                  intention: monde,       langue: en}
-  - {handle: "@TLDRnewsEU",           intention: monde,       langue: en}
-  - {handle: "@EconomicsExplained",   intention: monde,       langue: en}
+  # ------------------------------------------------------------------ MONDE
+  # Économie, géopolitique, société, enquête. Daté et situé.
+  - {handle: "@Heu7reka",               intention: monde, langue: fr}
+  - {handle: "@StupidEconomics",        intention: monde, langue: fr}
+  - {handle: "@OsonsCauser",            intention: monde, langue: fr}
+  - {handle: "@datagueule",             intention: monde, langue: fr}
+  - {handle: "@blastinfo",              intention: monde, langue: fr}
+  - {handle: "@Micode",                 intention: monde, langue: fr}
+  - {handle: "@LeMondefr",              intention: monde, langue: fr}
+  - {handle: "@ARTEfr",                 intention: monde, langue: fr}
+  - {handle: "@Johnnyharris",           intention: monde, langue: en}
+  - {handle: "@Wendoverproductions",    intention: monde, langue: en}
+  - {handle: "@RealLifeLore",           intention: monde, langue: en}
+  - {handle: "@PolyMatter",             intention: monde, langue: en}
+  - {handle: "@CGPGrey",                intention: monde, langue: en}
+  - {handle: "@Vox",                    intention: monde, langue: en}
+  - {handle: "@TLDRnewsEU",             intention: monde, langue: en}
+  - {handle: "@EconomicsExplained",     intention: monde, langue: en}
+  - {handle: "@bloomberg",              intention: monde, langue: en}
 
-  # -------------------------------------------------------------- S'ÉMERVEILLER
-  # Nature, espace, exploration, artisanat spectaculaire, beau geste.
-  - {handle: "@ARTE",                 intention: emerveiller, langue: fr}
-  - {handle: "@Boreales",             intention: emerveiller, langue: fr}
-  - {handle: "@LaminuteAgricole",     intention: emerveiller, langue: fr}
-  - {handle: "@bbcearth",             intention: emerveiller, langue: en}
-  - {handle: "@NatGeo",               intention: emerveiller, langue: en}
-  - {handle: "@SlowMoGuys",           intention: emerveiller, langue: en}
-  - {handle: "@primitivetechnology",  intention: emerveiller, langue: en}
-  - {handle: "@SpaceX",               intention: emerveiller, langue: en}
-  - {handle: "@Practical_Engineering", intention: emerveiller, langue: en}
-  - {handle: "@Nilered",              intention: emerveiller, langue: en}
+  # ---------------------------------------------------------------- OEUVRES
+  # Cinéma, musique, littérature, art. On parle d'une œuvre.
+  - {handle: "@LeFossoyeurdeFilms",     intention: oeuvres, langue: fr}
+  - {handle: "@Bolchegeek",             intention: oeuvres, langue: fr}
+  - {handle: "@LinksTheSun",            intention: oeuvres, langue: fr}
+  - {handle: "@CalmosOfficiel",         intention: oeuvres, langue: fr}
+  - {handle: "@LeVortexOfficiel",       intention: oeuvres, langue: fr}
+  - {handle: "@Nerdwriter1",            intention: oeuvres, langue: en}
+  - {handle: "@ThomasFlight",           intention: oeuvres, langue: en}
+  - {handle: "@LikeStoriesofOld",       intention: oeuvres, langue: en}
+  - {handle: "@Tantacrul",              intention: oeuvres, langue: en}
+  - {handle: "@Adamneely",              intention: oeuvres, langue: en}
+  - {handle: "@PatrickHWillems",        intention: oeuvres, langue: en}
+  - {handle: "@AccentedCinema",         intention: oeuvres, langue: en}
+  - {handle: "@TheCinemaCartography",   intention: oeuvres, langue: en}
 
-  # ------------------------------------------------------------------ CULTURE
-  # Histoire, cinéma, littérature, musique, art, philosophie.
-  - {handle: "@NotaBeneMovies",       intention: culture,     langue: fr}
-  - {handle: "@Cestuneautrehistoire", intention: culture,     langue: fr}
-  - {handle: "@ConfessionsdHistoire", intention: culture,     langue: fr}
-  - {handle: "@LeFossoyeurdeFilms",   intention: culture,     langue: fr}
-  - {handle: "@Bolchegeek",           intention: culture,     langue: fr}
-  - {handle: "@LinksTheSun",          intention: culture,     langue: fr}
-  - {handle: "@ArteCinema",           intention: culture,     langue: fr}
-  - {handle: "@HistoriaCivilis",      intention: culture,     langue: en}
-  - {handle: "@FallofCivilizations",  intention: culture,     langue: en}
-  - {handle: "@LEMMiNO",              intention: culture,     langue: en}
-  - {handle: "@Nerdwriter1",          intention: culture,     langue: en}
-  - {handle: "@ThomasFlight",         intention: culture,     langue: en}
-  - {handle: "@LikeStoriesofOld",     intention: culture,     langue: en}
-  - {handle: "@Tantacrul",            intention: culture,     langue: en}
-  - {handle: "@Adamneely",            intention: culture,     langue: en}
-  - {handle: "@PatrickHWillems",      intention: culture,     langue: en}
-  - {handle: "@NativLang",            intention: culture,     langue: en}
+  # ------------------------------------------------------------------ RECIT
+  # Documentaire narratif, histoire racontée, enquête longue.
+  # Le meilleur pourvoyeur de Soirée et Long cours.
+  - {handle: "@NotaBeneMovies",         intention: recit, langue: fr}
+  - {handle: "@CestUneAutreHistoire",   intention: recit, langue: fr}
+  - {handle: "@ConfessionsdHistoire",   intention: recit, langue: fr}
+  - {handle: "@LaTronche",              intention: recit, langue: fr}
+  - {handle: "@Feldup",                 intention: recit, langue: fr}
+  - {handle: "@AbrahamOnTime",          intention: recit, langue: fr}
+  - {handle: "@HistoriaCivilis",        intention: recit, langue: en}
+  - {handle: "@FallofCivilizations",    intention: recit, langue: en}
+  - {handle: "@LEMMiNO",                intention: recit, langue: en}
+  - {handle: "@Defunctland",            intention: recit, langue: en}
+  - {handle: "@Noclip",                 intention: recit, langue: en}
+  - {handle: "@BarelySociable",         intention: recit, langue: en}
+  - {handle: "@FascinatingHorror",      intention: recit, langue: en}
 
-  # --------------------------------------------------------------------- FAIRE
-  # Pratique, technique, savoir-faire, outils.
-  - {handle: "@Micode",               intention: faire,       langue: fr}
-  - {handle: "@Underscore_",          intention: faire,       langue: fr}
-  - {handle: "@Cuisine-AZ",           intention: faire,       langue: fr}
-  - {handle: "@Fireship",             intention: faire,       langue: en}
-  - {handle: "@AdamSavagesTested",    intention: faire,       langue: en}
-  - {handle: "@ThisOldTony",          intention: faire,       langue: en}
-  - {handle: "@JoshuaWeissman",       intention: faire,       langue: en}
-  - {handle: "@EthanChlebowski",      intention: faire,       langue: en}
-  - {handle: "@StuffMadeHere",        intention: faire,       langue: en}
+  # ------------------------------------------------------------------ FAIRE
+  # Un geste transférable. Cuisine, atelier, technique.
+  - {handle: "@FrancoisChartier",       intention: faire, langue: fr}
+  - {handle: "@ChefMichelDumas",        intention: faire, langue: fr}
+  - {handle: "@LAtelierdeRoxane",       intention: faire, langue: fr}
+  - {handle: "@BricoleurPro",           intention: faire, langue: fr}
+  - {handle: "@Fireship",               intention: faire, langue: en}
+  - {handle: "@tested",                 intention: faire, langue: en}
+  - {handle: "@ThisOldTony",            intention: faire, langue: en}
+  - {handle: "@JoshuaWeissman",         intention: faire, langue: en}
+  - {handle: "@EthanChlebowski",        intention: faire, langue: en}
+  - {handle: "@ChrisFix",               intention: faire, langue: en}
+  - {handle: "@BlacktailStudio",        intention: faire, langue: en}
 
-  # ------------------------------------------------------------------ DÉTENTE
-  # Récit, humour intelligent, formats longs sans effort cognitif.
-  - {handle: "@Squeezie",             intention: detente,     langue: fr}
-  - {handle: "@Cyprien",              intention: detente,     langue: fr}
-  - {handle: "@MonsieurSam",          intention: detente,     langue: fr}
-  - {handle: "@TomScottGo",           intention: detente,     langue: en}
-  - {handle: "@jontron",              intention: detente,     langue: en}
-  - {handle: "@TechnologyConnections", intention: detente,    langue: en}
-  - {handle: "@Defunctland",          intention: detente,     langue: en}
-  - {handle: "@JennaMarbles",         intention: detente,     langue: en}
+  # --------------------------------------------------------------- REGARDER
+  # La valeur est dans l'image. Nature, espace, geste spectaculaire.
+  - {handle: "@Boreales",               intention: regarder, langue: fr}
+  - {handle: "@ushuaiatv",              intention: regarder, langue: fr}
+  - {handle: "@bbcearth",               intention: regarder, langue: en}
+  - {handle: "@NatGeo",                 intention: regarder, langue: en}
+  - {handle: "@theslowmoguys",          intention: regarder, langue: en}
+  - {handle: "@primitivetechnology",    intention: regarder, langue: en}
+  - {handle: "@SpaceX",                 intention: regarder, langue: en}
+  - {handle: "@NileRed",                intention: regarder, langue: en}
+  - {handle: "@StuffMadeHere",          intention: regarder, langue: en}
+  - {handle: "@TomScottGo",             intention: regarder, langue: en}
+
+  # ---------------------------------------------------------------- ECOUTER
+  # Entretiens et podcasts filmés. Alimente Soirée et Long cours.
+  - {handle: "@thinkerview",            intention: ecouter, langue: fr}
+  - {handle: "@GDIYPodcast",            intention: ecouter, langue: fr}
+  - {handle: "@LEGEND",                 intention: ecouter, langue: fr}
+  - {handle: "@Konbini",                intention: ecouter, langue: fr}
+  - {handle: "@lexfridman",             intention: ecouter, langue: en}
+  - {handle: "@hubermanlab",            intention: ecouter, langue: en}
+  - {handle: "@TheDiaryOfACEO",         intention: ecouter, langue: en}
+  - {handle: "@ColdFusion",             intention: ecouter, langue: en}
+
+  # ------------------------------------------------------------------ JOUER
+  - {handle: "@JoueurDuGrenier",        intention: jouer, langue: fr}
+  - {handle: "@ZeratoR",                intention: jouer, langue: fr}
+  - {handle: "@AlphaCast",              intention: jouer, langue: fr}
+  - {handle: "@BazarDuGrenier",         intention: jouer, langue: fr}
+  - {handle: "@videogamedunkey",        intention: jouer, langue: en}
+  - {handle: "@NakeyJakey",             intention: jouer, langue: en}
+  - {handle: "@GameMakersToolkit",      intention: jouer, langue: en}
+
+  # ----------------------------------------------------------------- BOUGER
+  - {handle: "@MajorMouvement",         intention: bouger, langue: fr}
+  - {handle: "@TiboInShape",            intention: bouger, langue: fr}
+  - {handle: "@Nicolas_Vitiello",       intention: bouger, langue: fr}
+  - {handle: "@yogawithadriene",        intention: bouger, langue: en}
+  - {handle: "@gcn",                    intention: bouger, langue: en}
+  - {handle: "@SquatUniversity",        intention: bouger, langue: en}
+  - {handle: "@redbull",                intention: bouger, langue: en}
+
+  # ------------------------------------------------------------------- RIRE
+  - {handle: "@Cyprien",                intention: rire, langue: fr}
+  - {handle: "@Squeezie",               intention: rire, langue: fr}
+  - {handle: "@McFlyetCarlito",         intention: rire, langue: fr}
+  - {handle: "@palmashow",              intention: rire, langue: fr}
+  - {handle: "@GoldenMoustache",        intention: rire, langue: fr}
+  - {handle: "@jontron",                intention: rire, langue: en}
+  - {handle: "@DrewGooden",             intention: rire, langue: en}
+  - {handle: "@dannygonzalez",          intention: rire, langue: en}

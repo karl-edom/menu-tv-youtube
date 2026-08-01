@@ -64,13 +64,41 @@ NS = {
 # que des rôles : chaque intention reçoit un rang, qui devient une classe
 # `af-section--N`. Aucune couleur, aucune taille dans ce fichier — pour changer
 # l'apparence, on remplace la feuille, pas le programme.
+#
+# LES INTENTIONS SONT UNE BIBLIOTHÈQUE, PAS UNE GRILLE.
+# Elles sont définies sur UN SEUL axe — « qu'est-ce qu'il te reste après ? » —
+# pour que le classement soit reproductible : si un humain ne peut pas trancher
+# de la même façon deux fois, un classeur automatique ne le pourra pas non plus.
+# Chacun en active ensuite un sous-ensemble depuis la page ; la grille du jour
+# reste courte même si la bibliothèque s'élargit.
+#
+# Le champ `creneaux` dit quelles durées cette intention peut réellement servir.
+# Un entretien de 6 minutes n'existe pas, une vidéo drôle de deux heures non
+# plus : déclarer ces cases plutôt que les laisser vides évite de faire passer
+# une absence structurelle pour un manque de chaînes.
+#
+# (clé, libellé, description, créneaux servis)
 INTENTIONS = [
-    ("apprendre", "Apprendre", "Comprendre un mécanisme, acquérir une notion."),
-    ("monde", "Comprendre le monde", "Économie, géopolitique, société, enquête."),
-    ("emerveiller", "S'émerveiller", "Nature, espace, exploration, beau geste."),
-    ("culture", "Se cultiver", "Histoire, cinéma, musique, littérature, art."),
-    ("faire", "Faire", "Technique, cuisine, artisanat, savoir-faire."),
-    ("detente", "Se détendre", "Récit, humour, formats sans effort."),
+    ("comprendre", "Comprendre", "Un mécanisme. Ça marche comment ?",
+     ["cafe", "pause", "soiree", "long"]),
+    ("monde", "Le monde", "Une situation. Pourquoi c'est comme ça ?",
+     ["cafe", "pause", "soiree", "long"]),
+    ("oeuvres", "Œuvres", "Une rencontre. Cinéma, musique, littérature, art.",
+     ["cafe", "pause", "soiree", "long"]),
+    ("recit", "Récit", "Une histoire. Début, milieu, fin.",
+     ["pause", "soiree", "long"]),
+    ("faire", "Faire", "Un savoir-faire. Un geste que tu peux reproduire.",
+     ["cafe", "pause", "soiree"]),
+    ("regarder", "Regarder", "Une image. La valeur est dans ce qu'on voit.",
+     ["cafe", "pause", "soiree"]),
+    ("ecouter", "Écouter penser", "Une conversation. Quelqu'un déroule une pensée.",
+     ["soiree", "long"]),
+    ("jouer", "Jouer", "Une partie. Jeu, compétition, univers.",
+     ["pause", "soiree", "long"]),
+    ("bouger", "Bouger", "Un corps en action. Sport, performance physique.",
+     ["cafe", "pause", "soiree"]),
+    ("rire", "Rire", "Un moment léger, assumé comme tel.",
+     ["cafe", "pause"]),
 ]
 
 # (clé, libellé, borne basse en minutes, borne haute)
@@ -80,6 +108,11 @@ CRENEAUX = [
     ("soiree", "Soirée", 30, 75),
     ("long", "Long cours", 75, 100_000),
 ]
+
+
+def cellules() -> list[tuple[str, str]]:
+    """Les cases qui existent réellement, intention par intention."""
+    return [(i[0], c) for i in INTENTIONS for c in i[3]]
 
 # Fenêtre de candidature : au-delà, une vidéo n'est plus "à l'affiche".
 FENETRE_JOURS = 21
@@ -443,7 +476,7 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
         v.score *= 1 - penalite_chaine(v.chaine_id)
 
     grille, chaines_utilisees = {}, set()
-    cellules = [(i[0], c[0]) for i in INTENTIONS for c in CRENEAUX]
+    cases = cellules()
 
     # Les cases les plus contraintes d'abord : sinon les créneaux rares se
     # retrouvent vides parce qu'une case facile a raflé la seule chaîne dispo.
@@ -457,7 +490,7 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
             and v.age_jours <= FENETRE_JOURS
         )
 
-    for inten, cren in sorted(cellules, key=rarete):
+    for inten, cren in sorted(cases, key=rarete):
         pool = [
             v
             for v in retenus
@@ -489,8 +522,7 @@ def construire_vivier(candidats: list[Video], profondeur: int = 12) -> dict:
     moitié du vivier par des choix qu'il n'a jamais vus.
     """
     vivier = {}
-    for inten, *_ in INTENTIONS:
-        for cren, *_ in CRENEAUX:
+    for inten, cren in cellules():
             lot = sorted(
                 (
                     v for v in candidats
@@ -522,7 +554,8 @@ def construire_donnees(candidats: list[Video], chaines_actives: list[dict]) -> d
     return {
         "genere_le": datetime.now(timezone.utc).date().isoformat(),
         "intentions": [
-            {"cle": c, "libelle": l, "desc": d} for c, l, d in INTENTIONS
+            {"cle": c, "libelle": l, "desc": d, "creneaux": cr}
+            for c, l, d, cr in INTENTIONS
         ],
         "creneaux": [{"cle": c, "libelle": l} for c, l, *_ in CRENEAUX],
         "chaines": chaines_actives,
@@ -535,9 +568,12 @@ def diagnostic(candidats: list[Video]) -> str:
     lignes = [
         "  intention           " + "".join(f"{c[1]:>12}" for c in CRENEAUX),
     ]
-    for cle, libelle, *_ in INTENTIONS:
+    for cle, libelle, _desc, servis in INTENTIONS:
         cases = []
         for c_cle, *_ in CRENEAUX:
+            if c_cle not in servis:
+                cases.append("       .   ")
+                continue
             recents = sum(
                 1
                 for v in candidats
@@ -616,9 +652,11 @@ def rendre(grille: dict, stats: dict, donnees: dict) -> str:
     )
 
     sections = []
-    for rang, (cle, libelle, desc) in enumerate(INTENTIONS, start=1):
+    for rang, (cle, libelle, desc, servis) in enumerate(INTENTIONS, start=1):
         fiches = []
         for c_cle, c_lib, bas, haut in CRENEAUX:
+            if c_cle not in servis:
+                continue
             v = grille.get((cle, c_cle))
             if not v:
                 fiches.append(
@@ -702,18 +740,46 @@ def escape(t: str) -> str:
 def fabriquer_demo(chaines: list[dict]) -> list[Video]:
     rng = random.Random(20260731)
     exemples = {
-        "apprendre": ["Pourquoi le cuivre conduit mieux que l'or", "La démonstration qui a mis 300 ans",
-                      "Ce que révèle vraiment un spectre", "Le problème des trois corps, sans équations"],
-        "monde": ["Qui contrôle vraiment le détroit d'Ormuz", "L'économie du café en quatre chiffres",
-                  "Pourquoi les ports européens saturent", "Le vrai coût d'un barrage"],
-        "emerveiller": ["Une éruption filmée à 10 000 images/seconde", "Six mois dans une forêt primaire",
-                        "Le vol du martinet, image par image", "Fabriquer une hache à partir de rien"],
-        "culture": ["Ce que Kubrick a coupé au montage", "Rome avant l'Empire : la république qui s'effondre",
-                    "Pourquoi cet accord sonne triste", "Le plan-séquence qui a tout changé"],
-        "faire": ["Réparer un moteur pas à pas", "La cuisson basse température, enfin claire",
-                  "Construire son serveur en 40 minutes", "Affûter correctement un couteau"],
-        "detente": ["J'ai visité le pays le plus étrange d'Europe", "L'histoire absurde d'un parc abandonné",
-                    "Pourquoi les grille-pain sont mal conçus", "48 h dans un train de nuit"],
+        "comprendre": ["Pourquoi le cuivre conduit mieux que l'or",
+                       "La démonstration qui a mis 300 ans",
+                       "Ce que révèle vraiment un spectre",
+                       "Le problème des trois corps, sans équations"],
+        "monde": ["Qui contrôle vraiment le détroit d'Ormuz",
+                  "L'économie du café en quatre chiffres",
+                  "Pourquoi les ports européens saturent",
+                  "Le vrai coût d'un barrage"],
+        "oeuvres": ["Ce que Kubrick a coupé au montage",
+                    "Pourquoi cet accord sonne triste",
+                    "Le plan-séquence qui a tout changé",
+                    "Relire Duras à trente ans"],
+        "recit": ["Rome avant l'Empire : la république qui s'effondre",
+                  "L'histoire absurde d'un parc abandonné",
+                  "Le naufrage dont personne ne parle",
+                  "Six mois pour retrouver un tableau"],
+        "faire": ["Réparer un moteur pas à pas",
+                  "La cuisson basse température, enfin claire",
+                  "Construire son serveur en 40 minutes",
+                  "Affûter correctement un couteau"],
+        "regarder": ["Une éruption filmée à 10 000 images/seconde",
+                     "Six mois dans une forêt primaire",
+                     "Le vol du martinet, image par image",
+                     "Fabriquer une hache à partir de rien"],
+        "ecouter": ["Trois heures avec un climatologue",
+                    "Ce que quarante ans de terrain lui ont appris",
+                    "Entretien : sortir du récit dominant",
+                    "La conversation qu'on n'attendait pas"],
+        "jouer": ["Le jeu qui a inventé un genre",
+                  "Pourquoi ce niveau est mal conçu",
+                  "Vingt ans après, on y rejoue",
+                  "La partie la plus longue de ma vie"],
+        "bouger": ["Ce que ton dos essaie de te dire",
+                   "Courir sans se blesser, vraiment",
+                   "La descente filmée en une prise",
+                   "Trente minutes, sans matériel"],
+        "rire": ["J'ai visité le pays le plus étrange d'Europe",
+                 "Pourquoi les grille-pain sont mal conçus",
+                 "On a refait la pub la plus nulle de 2003",
+                 "48 h dans un train de nuit"],
     }
     videos = []
     for c in chaines:
@@ -856,7 +922,7 @@ def main():
     grille = selectionner(candidats, histo_videos, histo_chaines)
     nb_rattrapage = sum(1 for v in grille.values() if v.rattrapage)
     print(
-        f"{len(grille)} cases remplies sur {len(INTENTIONS) * len(CRENEAUX)}"
+        f"{len(grille)} cases remplies sur {len(cellules())}"
         + (f" (dont {nb_rattrapage} en rattrapage)" if nb_rattrapage else "")
     )
 

@@ -55,6 +55,9 @@
     return {
       langues: Array.isArray(r.langues) && r.langues.length ? r.langues : ["fr", "en"],
       chainesMasquees: r.chainesMasquees || [],
+      // null = toutes actives. Un tableau vide serait un écran blanc, donc on
+      // distingue « pas encore réglé » de « tout décoché ».
+      intentions: Array.isArray(r.intentions) ? r.intentions : null,
     };
   }
 
@@ -108,7 +111,7 @@
 
     const cellules = [];
     for (const i of donnees.intentions)
-      for (const c of donnees.creneaux) cellules.push(`${i.cle}|${c.cle}`);
+      for (const c of i.creneaux) cellules.push(`${i.cle}|${c}`);
 
     // Rareté calculée avant toute attribution, sinon l'ordre dépend de lui-même.
     const rarete = new Map(
@@ -186,8 +189,11 @@
     );
     const grille = construireGrille(donnees, reg, histo, dus, differes);
 
+    const actives = reg.intentions;
     const sections = donnees.intentions.map((intention, i) => {
+      if (actives && !actives.includes(intention.cle)) return "";
       const cases = donnees.creneaux
+        .filter((c) => intention.creneaux.includes(c.cle))
         .map((c) => {
           const v = grille.get(`${intention.cle}|${c.cle}`);
           return v
@@ -207,7 +213,12 @@
 
     document.querySelector("[data-zone=grille]").innerHTML = sections.join("");
     const compte = document.querySelector("[data-zone=compte]");
-    if (compte) compte.textContent = grille.size;
+    if (compte) {
+      const visibles = [...grille.keys()].filter(
+        (k) => !actives || actives.includes(k.split("|")[0])
+      );
+      compte.textContent = visibles.length;
+    }
   }
 
   // ------------------------------------------------------------------ actions
@@ -275,6 +286,17 @@
     const souhaits = lire(CLES.souhaits, []);
     const masquees = new Set(reg.chainesMasquees);
 
+    const actives = reg.intentions;
+    const categories = donnees.intentions
+      .map((i) => {
+        const n = (donnees.chaines || []).filter((c) => c.intention === i.cle).length;
+        const coche = !actives || actives.includes(i.cle) ? "checked" : "";
+        return `<label class="af-choix">
+          <input type="checkbox" data-intention="${i.cle}" ${coche}>
+          <span>${i.libelle} <em>${n} chaînes</em></span></label>`;
+      })
+      .join("");
+
     const langues = [["fr", "Français"], ["en", "Anglais"]]
       .map(([code, nom]) => `<label class="af-choix">
         <input type="checkbox" data-langue="${code}" ${reg.langues.includes(code) ? "checked" : ""}>
@@ -301,6 +323,13 @@
       : '<p class="af-note">Aucune chaîne en attente.</p>';
 
     return `<div class="af-panneau__contenu">
+  <section>
+    <h3>Catégories</h3>
+    <p class="af-note">La bibliothèque est large, ta grille reste courte.
+      Active ce que tu veux voir tous les jours.</p>
+    <div class="af-colonnes-2">${categories}</div>
+  </section>
+
   <section>
     <h3>Langues</h3>
     <p class="af-note">Décocher tout revient à tout afficher.</p>
@@ -362,6 +391,12 @@
         reg.langues = [...hote.querySelectorAll("[data-langue]:checked")].map((i) => i.dataset.langue);
         if (!reg.langues.length) reg.langues = ["fr", "en"];
       }
+      const it = e.target.dataset.intention;
+      if (it) {
+        reg.intentions = [...hote.querySelectorAll("[data-intention]:checked")]
+          .map((i) => i.dataset.intention);
+        if (!reg.intentions.length) reg.intentions = null; // tout décoché = tout
+      }
       const c = e.target.dataset.chaine;
       if (c) {
         const masquees = new Set(reg.chainesMasquees);
@@ -370,7 +405,7 @@
       }
       ecrire(CLES.reglages, reg);
       rendre(donnees);
-      if (l) peindre(); // les cases de langue se re-normalisent
+      if (l || it) peindre(); // les cases se re-normalisent
     });
 
     hote.addEventListener("click", (e) => {

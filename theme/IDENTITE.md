@@ -50,21 +50,35 @@ et non comme une métadonnée — c'est par elle qu'on choisit.
 
 ## La palette
 
-Six teintes catégorielles, validées ensemble : bande de clarté OKLCH, plancher de
-chroma, ΔE protan/deutan sur les paires adjacentes, contraste sur les surfaces
-sombres.
+Dix teintes catégorielles : les huit de la palette de référence, plus deux
+ajoutées, dans un ordre trouvé par recherche sous double contrainte.
 
 | Token | Teinte | Encre posée dessus | Ratio |
 |---|---|---|---|
-| `--af-t1` | `#3987e5` bleu | noir | 5,44:1 |
-| `--af-t2` | `#d95926` orange | noir | 5,09:1 |
-| `--af-t3` | `#199e70` aqua | noir | 5,81:1 |
+| `--af-t1` | `#d95926` orange | noir | 5,09:1 |
+| `--af-t2` | `#199e70` aqua | noir | 5,81:1 |
+| `--af-t3` | `#a901e6` violet | **blanc** | 5,48:1 |
 | `--af-t4` | `#c98500` jaune | noir | 6,44:1 |
 | `--af-t5` | `#d55181` magenta | noir | 5,01:1 |
-| `--af-t6` | `#008300` vert | **blanc** | 4,95:1 |
+| `--af-t6` | `#8c9510` olive | noir | 6,05:1 |
+| `--af-t7` | `#9085e9` lavande | noir | 6,33:1 |
+| `--af-t8` | `#008300` vert | **blanc** | 4,95:1 |
+| `--af-t9` | `#3987e5` bleu | noir | 5,44:1 |
+| `--af-t10` | `#e66767` rouge | noir | 6,12:1 |
 
-L'encre du vert diffère parce qu'elle est calculée, pas choisie : le noir n'y
-atteint que 4,00:1, sous le seuil du petit texte.
+L'encre diffère pour deux teintes parce qu'elle est **calculée, pas choisie** :
+sur le violet et le vert, le noir n'atteint pas le seuil du petit texte.
+
+Vérifié sur les deux surfaces sombres (`#08080a` et `#101015`) : bande de clarté
+OKLCH, plancher de chroma, séparation daltonisme, contraste. Sur les paires
+adjacentes, le pire écart tient **9,4 en deutan** (cible 8) et **19,3 en vision
+normale** (plancher 15).
+
+Comment cet ordre a été obtenu : les 45 paires ont été mesurées une à une avec le
+validateur, puis l'ordre cherché en maximisant la marge la plus faible sur les
+deux portes simultanément. Un premier essai qui n'optimisait que le daltonisme
+atteignait 11,5 en CVD mais faisait tomber la vision normale à 11,9 — sous le
+plancher dur. Les deux contraintes se tiennent ensemble ou pas du tout.
 
 ## Les trois règles à ne pas casser
 
@@ -74,7 +88,7 @@ franchissant chaque seuil sur les paires adjacentes ont été retenus. Réordonn
 ou substituer une teinte isolée casse la garantie — il faut revalider l'ensemble.
 
 **2. Aucun petit texte ne porte la teinte.** À 11-12 px le seuil est de 4,5:1 sur
-le fond, et quatre teintes sur six échouent. Le texte porte un jeton d'encre ;
+le fond, et la plupart des teintes échouent. Le texte porte un jeton d'encre ;
 l'identité passe par un aplat ou un filet, qui sont des marques et non du texte.
 Sur un aplat, c'est l'encre associée à la teinte qui s'applique.
 
