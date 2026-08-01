@@ -19,7 +19,19 @@
     reports: "menu-tv:reports",
     souhaits: "menu-tv:souhaits",
     theme: "menu-tv:theme",
+    temps: "menu-tv:temps",
   };
+
+  /* Le temps disponible n'est PAS un réglage : il change à chaque fois qu'on
+     ouvre la page. Il est donc mémorisé avec la date du jour et remis à zéro
+     le lendemain — sinon on retrouverait « 20 minutes » un dimanche soir. */
+  const TEMPS = [
+    { minutes: 10,   libelle: "10 min" },
+    { minutes: 20,   libelle: "20 min" },
+    { minutes: 45,   libelle: "45 min" },
+    { minutes: 90,   libelle: "1 h 30" },
+    { minutes: null, libelle: "Tout le temps" },
+  ];
 
   /* Trois états, pas deux : « auto » suit le système et doit rester
      joignable, sinon quelqu'un qui bascule une fois ne retrouve jamais le
@@ -85,6 +97,12 @@
 
   const aujourdhui = () => new Date().toISOString().slice(0, 10);
 
+  function tempsDispo() {
+    const t = lire(CLES.temps, null);
+    if (!t || t.date !== aujourdhui()) return null;   // périmé : tout le temps
+    return typeof t.minutes === "number" ? t.minutes : null;
+  }
+
   function demain() {
     const d = new Date();
     d.setDate(d.getDate() + 1);
@@ -125,7 +143,7 @@
   /* Mêmes règles que la sélection serveur : une case = une vidéo, une chaîne
      n'apparaît qu'une fois dans la grille, et les cases les plus pauvres sont
      servies en premier pour ne pas se faire rafler leur seul candidat. */
-  function construireGrille(donnees, reg, histo, reportsDus, differes) {
+  function construireGrille(donnees, reg, histo, reportsDus, differes, budget) {
     const grille = new Map();
     const chainesPrises = new Set();
 
@@ -133,6 +151,7 @@
     //    demandé cette vidéo pour aujourd'hui, elle passe avant le classement.
     for (const r of reportsDus) {
       if (grille.has(r.cellule)) continue;
+      if (budget !== null && r.video.duree_s > budget) continue;  // ne rentre pas
       grille.set(r.cellule, { ...r.video, reporte: true });
       chainesPrises.add(r.video.chaine_id);
     }
@@ -140,6 +159,11 @@
     // `differes` : reportée à une date encore à venir. Sans ce filtre, la
     // vidéo qu'on vient de repousser réapparaîtrait immédiatement — reporter
     // ne servirait à rien.
+    // `budget` en secondes, ou null. C'est un critère d'ÉLIGIBILITÉ, pas un
+    // masquage après coup : sinon une case se viderait alors qu'il existait un
+    // candidat plus court, un cran plus bas dans le vivier.
+    const tientDansLeTemps = (v) => budget === null || v.duree_s <= budget;
+
     const eligibles = (cellule) =>
       (donnees.vivier[cellule] || []).filter(
         (v) =>
@@ -147,6 +171,7 @@
           !reg.chainesMasquees.includes(v.chaine_id) &&
           !histo[v.id] &&
           !differes.has(v.id) &&
+          tientDansLeTemps(v) &&
           !chainesPrises.has(v.chaine_id)
       );
 
@@ -159,7 +184,10 @@
       cellules.map((c) => [
         c,
         (donnees.vivier[c] || []).filter(
-          (v) => reg.langues.includes(v.langue) && !reg.chainesMasquees.includes(v.chaine_id)
+          (v) =>
+            reg.langues.includes(v.langue) &&
+            !reg.chainesMasquees.includes(v.chaine_id) &&
+            tientDansLeTemps(v)
         ).length,
       ])
     );
@@ -228,18 +256,28 @@
     const differes = new Set(
       Object.entries(reports).filter(([, r]) => r.date > jour).map(([id]) => id)
     );
-    const grille = construireGrille(donnees, reg, histo, dus, differes);
+    const minutes = tempsDispo();
+    const budget = minutes === null ? null : minutes * 60;
+    const grille = construireGrille(donnees, reg, histo, dus, differes, budget);
 
     const actives = reg.intentions;
     const sections = donnees.intentions.map((intention, i) => {
       if (actives && !actives.includes(intention.cle)) return "";
+      const servis = donnees.creneaux.filter(
+        (c) => intention.creneaux.includes(c.cle) && (minutes === null || c.min <= minutes)
+      );
+      if (!servis.length) return "";
       const cases = donnees.creneaux
         .filter((c) => intention.creneaux.includes(c.cle))
+        // Un créneau dont la borne basse dépasse le temps disponible n'est pas
+        // « vide », il est hors sujet : on le retire au lieu d'afficher un
+        // trou qu'on prendrait pour un manque de chaînes.
+        .filter((c) => minutes === null || c.min <= minutes)
         .map((c) => {
           const v = grille.get(`${intention.cle}|${c.cle}`);
-          return v
-            ? fiche(v, c.libelle)
-            : `<div class="af-vide"><span class="af-vide__creneau">${c.libelle}</span><span>rien de neuf</span></div>`;
+          if (v) return fiche(v, c.libelle);
+          const raison = minutes === null ? "rien de neuf" : "rien qui rentre";
+          return `<div class="af-vide"><span class="af-vide__creneau">${c.libelle}</span><span>${raison}</span></div>`;
         })
         .join("");
       return `<section class="af-section af-section--${i + 1}">
@@ -260,6 +298,38 @@
       );
       compte.textContent = visibles.length;
     }
+  }
+
+  // ------------------------------------------------------- temps disponible
+
+  function peindreTemps() {
+    const hote = document.querySelector("[data-zone=temps]");
+    if (!hote) return;
+    const courant = tempsDispo();
+    const puces = TEMPS.map((t) => {
+      const actif = t.minutes === courant;
+      return `<button type="button" class="af-chip${actif ? " af-chip--actif" : ""}"
+        data-role="temps" data-minutes="${t.minutes === null ? "" : t.minutes}"
+        aria-pressed="${actif}">${t.libelle}</button>`;
+    }).join("");
+    hote.innerHTML = `<span class="af-barre__intitule">J'ai</span>${puces}`;
+  }
+
+  function brancherTemps(donnees) {
+    peindreTemps();
+    const hote = document.querySelector("[data-zone=temps]");
+    if (!hote) return;
+    hote.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-role=temps]");
+      if (!b) return;
+      const brut = b.dataset.minutes;
+      ecrire(CLES.temps, {
+        date: aujourdhui(),
+        minutes: brut === "" ? null : Number(brut),
+      });
+      peindreTemps();
+      rendre(donnees);
+    });
   }
 
   // ------------------------------------------------------------------ actions
@@ -496,6 +566,7 @@
   }
 
   brancherTheme();
+  brancherTemps(donnees);
   rendre(donnees);
   brancherActions(donnees);
   brancherPanneau(donnees);

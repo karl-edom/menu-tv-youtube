@@ -635,7 +635,10 @@ def construire_donnees(candidats: list[Video], chaines_actives: list[dict]) -> d
             {"cle": c, "libelle": l, "desc": d, "creneaux": cr}
             for c, l, d, cr in INTENTIONS
         ],
-        "creneaux": [{"cle": c, "libelle": l} for c, l, *_ in CRENEAUX],
+        "creneaux": [
+            {"cle": c, "libelle": l, "min": bas, "max": haut}
+            for c, l, bas, haut in CRENEAUX
+        ],
         "chaines": chaines_actives,
         "vivier": construire_vivier(candidats),
     }
@@ -696,6 +699,7 @@ if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)
   <p class="af-entete__chapo"><span data-zone="compte">{nb}</span> propositions pour
      aujourd'hui, une par case. Rien de plus. Ce qui a déjà été proposé ne reviendra
      pas avant {memoire} jours.</p>
+  <div class="af-barre af-barre--temps" data-zone="temps"></div>
   <div class="af-barre">
     <button type="button" class="af-bouton af-bascule" data-role="basculer-theme"
             aria-live="polite"><span data-zone="theme-libelle">Auto</span></button>

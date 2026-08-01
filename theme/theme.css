@@ -475,3 +475,37 @@ body.af {
   .af-fiche { transition: none; }
   .af-fiche:hover, .af-fiche:focus-within { transform: none; }
 }
+
+/* Le temps disponible : une décision de contexte, pas un réglage. Elle est
+   donc toujours visible, au-dessus de tout, et non enfouie dans un panneau. */
+.af-barre--temps { margin-top: var(--af-e4); gap: var(--af-e2); }
+.af-barre__intitule {
+  font-family: var(--af-display);
+  font-size: var(--k-size-title-3);
+  font-weight: var(--k-weight-semibold);
+  margin-right: var(--af-e2);
+}
+.af-chip {
+  font-family: var(--af-texte);
+  font-size: var(--af-t-label);
+  font-weight: var(--k-weight-semibold);
+  letter-spacing: var(--k-tracking-caption);
+  color: var(--af-encre-2);
+  background: transparent;
+  border: var(--af-trait-fin) solid var(--af-trait);
+  border-radius: var(--af-rayon);
+  padding: 6px var(--af-e3);
+  cursor: pointer; white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.af-chip:hover { border-color: var(--af-trait-fort); color: var(--af-encre); }
+.af-chip:focus-visible {
+  outline: var(--k-focus-width) solid var(--k-focus-ring);
+  outline-offset: var(--k-focus-offset);
+}
+/* L'état actif ne repose pas sur la seule couleur : il porte aussi
+   aria-pressed, et le contraste change franchement. */
+.af-chip--actif {
+  background: var(--k-brand); color: var(--k-brand-on);
+  border-color: var(--k-brand); font-weight: var(--k-weight-bold);
+}
