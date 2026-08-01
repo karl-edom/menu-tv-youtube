@@ -5,9 +5,10 @@
 #   intention : voir la liste ci-dessous
 #   langue    : fr | en
 #
-# LES DIX INTENTIONS, ET LE TEST QUI TRANCHE
+# LES ONZE INTENTIONS, ET LE TEST QUI TRANCHE
 # Une seule question : qu'est-ce qu'il te reste après ?
 #
+#   actualites  ce qui vient de se passer  daté, périssable — fenêtre de 2 jours
 #   comprendre  un mécanisme      « ça marche comment ? » — intemporel
 #   monde       une situation     « pourquoi c'est comme ça ? » — daté, situé
 #   oeuvres     une rencontre     ça parle d'une œuvre, d'un auteur, d'un courant
@@ -30,6 +31,13 @@
 # =============================================================================
 
 chaines:
+
+  # ------------------------------------------------------------- ACTUALITES
+  # Ce qui vient de se passer. Fenêtre courte : 2 jours, rattrapage 5.
+  # Les rédactions publient plusieurs fois par jour — deux vidéos maximum par
+  # chaîne dans le vivier, sinon elles écrasent tout.
+  - {handle: "@LeMondefr",              intention: actualites, langue: fr}
+  - {handle: "@bloomberg",              intention: actualites, langue: en}
 
   # ------------------------------------------------------------- COMPRENDRE
   # Mécanismes, sciences, mathématiques, technique. Intemporel.
@@ -67,7 +75,6 @@ chaines:
   - {handle: "@datagueule",             intention: monde, langue: fr}
   - {handle: "@blastinfo",              intention: monde, langue: fr}
   - {handle: "@Micode",                 intention: monde, langue: fr}
-  - {handle: "@LeMondefr",              intention: monde, langue: fr}
   - {handle: "@ARTEfr",                 intention: monde, langue: fr}
   - {handle: "@Johnnyharris",           intention: monde, langue: en}
   - {handle: "@Wendoverproductions",    intention: monde, langue: en}
@@ -77,7 +84,6 @@ chaines:
   - {handle: "@Vox",                    intention: monde, langue: en}
   - {handle: "@TLDRnewsEU",             intention: monde, langue: en}
   - {handle: "@EconomicsExplained",     intention: monde, langue: en}
-  - {handle: "@bloomberg",              intention: monde, langue: en}
 
   # ---------------------------------------------------------------- OEUVRES
   # Cinéma, musique, littérature, art. On parle d'une œuvre.
@@ -86,7 +92,6 @@ chaines:
   - {handle: "@LinksTheSun",            intention: oeuvres, langue: fr}
   - {handle: "@CalmosOfficiel",         intention: oeuvres, langue: fr}
   - {handle: "@LeVortexOfficiel",       intention: oeuvres, langue: fr}
-  - {handle: "@CinemaCinemas",          intention: oeuvres, langue: fr}
   - {handle: "@Nerdwriter1",            intention: oeuvres, langue: en}
   - {handle: "@ThomasFlight",           intention: oeuvres, langue: en}
   - {handle: "@LikeStoriesofOld",       intention: oeuvres, langue: en}
@@ -175,9 +180,6 @@ chaines:
   - {handle: "@McFlyetCarlito",         intention: rire, langue: fr}
   - {handle: "@palmashow",              intention: rire, langue: fr}
   - {handle: "@GoldenMoustache",        intention: rire, langue: fr}
-  - {handle: "@Amixem",                 intention: rire, langue: fr}
-  - {handle: "@inoxtag",                intention: rire, langue: fr}
   - {handle: "@jontron",                intention: rire, langue: en}
   - {handle: "@DrewGooden",             intention: rire, langue: en}
   - {handle: "@dannygonzalez",          intention: rire, langue: en}
-  - {handle: "@jimmycarr",              intention: rire, langue: en}

@@ -80,6 +80,8 @@ NS = {
 #
 # (clé, libellé, description, créneaux servis)
 INTENTIONS = [
+    ("actualites", "Actualités", "Ce qui vient de se passer. Daté, périssable.",
+     ["cafe", "pause", "soiree"]),
     ("comprendre", "Comprendre", "Un mécanisme. Ça marche comment ?",
      ["cafe", "pause", "soiree", "long"]),
     ("monde", "Le monde", "Une situation. Pourquoi c'est comme ça ?",
@@ -127,6 +129,18 @@ QUARANTAINE_CHAINE_JOURS = 10
 MEMOIRE_JOURS = 240
 # Une vidéo plus courte que ça est un Short : exclue.
 DUREE_MIN_SECONDES = 90
+
+# Certaines intentions périment plus vite que d'autres. Une actualité de trois
+# semaines n'est pas « en rattrapage », elle est morte — alors qu'un
+# documentaire de deux mois reste entièrement valable. La fenêtre est donc un
+# attribut de l'intention, pas une constante globale.
+FENETRES = {
+    "actualites": (2, 5),   # (fenêtre normale, rattrapage) en jours
+}
+
+
+def fenetre(intention: str) -> tuple[int, int]:
+    return FENETRES.get(intention, (FENETRE_JOURS, FENETRE_SECOURS))
 
 POIDS = {
     "surperformance": 0.45,  # la vidéo marche-t-elle mieux que d'habitude sur SA chaîne
@@ -553,7 +567,7 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
     for v in retenus:
         v.score *= 1 - penalite_chaine(v.chaine_id)
 
-    grille, chaines_utilisees = {}, set()
+    grille, chaines_utilisees, vides = {}, set(), []
     cases = cellules()
 
     # Les cases les plus contraintes d'abord : sinon les créneaux rares se
@@ -565,7 +579,7 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
             for v in retenus
             if v.intention == inten
             and creneau_de(v.duree_s) == cren
-            and v.age_jours <= FENETRE_JOURS
+            and v.age_jours <= fenetre(inten)[0]
         )
 
     for inten, cren in sorted(cases, key=rarete):
@@ -577,17 +591,42 @@ def selectionner(candidats: list[Video], histo_videos: dict, histo_chaines: dict
             and v.chaine_id not in chaines_utilisees
         ]
         if not pool:
+            vides.append((inten, cren))
             continue
         # Priorité absolue à la fenêtre courte. On n'élargit que si la case
         # serait vide sans ça.
-        frais = [v for v in pool if v.age_jours <= FENETRE_JOURS]
+        frais = [v for v in pool if v.age_jours <= fenetre(inten)[0]]
         choix = frais or pool
         gagnant = max(choix, key=lambda v: v.score)
         gagnant.rattrapage = not frais
         grille[(inten, cren)] = gagnant
         chaines_utilisees.add(gagnant.chaine_id)
 
-    return grille
+    return grille, vides
+
+
+def raisons_cases_vides(candidats, grille, histo_videos):
+    """Une case vide n'a pas toujours la même cause, et le remède diffère."""
+    out = []
+    for inten, cren in cellules():
+        if (inten, cren) in grille:
+            continue
+        tous = [v for v in candidats
+                if v.intention == inten and creneau_de(v.duree_s) == cren]
+        inedits = [v for v in tous if v.id not in histo_videos]
+        if not tous:
+            cause = "aucune vidéo de cette durée — il manque des chaînes"
+        elif not inedits:
+            cause = f"les {len(tous)} candidats ont déjà été proposés"
+        else:
+            chaines = {v.chaine_nom for v in inedits}
+            cause = (f"{len(inedits)} candidats mais seulement {len(chaines)} "
+                     f"chaîne(s), déjà servie(s) ailleurs")
+        out.append((inten, cren, cause))
+    return out
+
+
+PAR_CHAINE_MAX = 2   # dans une même case du vivier
 
 
 def construire_vivier(candidats: list[Video], profondeur: int = 12) -> dict:
@@ -601,14 +640,26 @@ def construire_vivier(candidats: list[Video], profondeur: int = 12) -> dict:
     """
     vivier = {}
     for inten, cren in cellules():
-            lot = sorted(
+            classes = sorted(
                 (
                     v for v in candidats
                     if v.intention == inten and creneau_de(v.duree_s) == cren
                 ),
                 key=lambda v: v.score,
                 reverse=True,
-            )[:profondeur]
+            )
+            # Plafond par chaîne : sans lui, une chaîne qui publie tous les
+            # jours (une rédaction, une agence) rafle les douze places du
+            # vivier. La page ne pouvant afficher qu'une vidéo par chaîne, la
+            # case se retrouve vide alors que le vivier semblait plein.
+            lot, compte = [], {}
+            for v in classes:
+                if compte.get(v.chaine_id, 0) >= PAR_CHAINE_MAX:
+                    continue
+                compte[v.chaine_id] = compte.get(v.chaine_id, 0) + 1
+                lot.append(v)
+                if len(lot) >= profondeur:
+                    break
             if lot:
                 vivier[f"{inten}|{cren}"] = [
                     {
@@ -621,7 +672,7 @@ def construire_vivier(candidats: list[Video], profondeur: int = 12) -> dict:
                         "vues": v.vues,
                         "age": round(v.age_jours, 1),
                         "surperf": v.detail.get("surperformance", 1.0),
-                        "rattrapage": v.age_jours > FENETRE_JOURS,
+                        "rattrapage": v.age_jours > fenetre(inten)[0],
                     }
                     for v in lot
                 ]
@@ -660,7 +711,7 @@ def diagnostic(candidats: list[Video]) -> str:
                 for v in candidats
                 if v.intention == cle
                 and creneau_de(v.duree_s) == c_cle
-                and v.age_jours <= FENETRE_JOURS
+                and v.age_jours <= fenetre(cle)[0]
             )
             total = sum(
                 1
@@ -831,6 +882,10 @@ def escape(t: str) -> str:
 def fabriquer_demo(chaines: list[dict]) -> list[Video]:
     rng = random.Random(20260731)
     exemples = {
+        "actualites": ["Ce que change l'accord signé cette nuit",
+                       "Trois minutes pour comprendre le vote d'hier",
+                       "La séquence qui a fait basculer la séance",
+                       "Marchés : ce qu'il faut retenir de la journée"],
         "comprendre": ["Pourquoi le cuivre conduit mieux que l'or",
                        "La démonstration qui a mis 300 ans",
                        "Ce que révèle vraiment un spectre",
@@ -1043,25 +1098,30 @@ def main():
 
     candidats = [
         v for v in toutes
-        if v.age_jours <= FENETRE_SECOURS
+        if v.age_jours <= fenetre(v.intention)[1]
         and v.duree_s >= DUREE_MIN_SECONDES
         and creneau_de(v.duree_s)
     ]
-    recents = sum(1 for v in candidats if v.age_jours <= FENETRE_JOURS)
+    recents = sum(1 for v in candidats if v.age_jours <= fenetre(v.intention)[0])
     ecartees = len(toutes) - len(candidats)
     print(
-        f"{len(candidats)} candidats retenus ({recents} dans la fenêtre de "
-        f"{FENETRE_JOURS} j, le reste en rattrapage jusqu'à {FENETRE_SECOURS} j) · "
-        f"{ecartees} vidéos écartées (trop vieilles, trop courtes ou Shorts)"
+        f"{len(candidats)} candidats retenus ({recents} dans la fenêtre "
+        f"habituelle de {FENETRE_JOURS} j — {FENETRES['actualites'][0]} j pour "
+        f"Actualités — le reste en rattrapage) · {ecartees} vidéos écartées "
+        f"(trop vieilles, trop courtes ou Shorts)"
     )
     print(diagnostic(candidats))
 
-    grille = selectionner(candidats, histo_videos, histo_chaines)
+    grille, _ = selectionner(candidats, histo_videos, histo_chaines)
     nb_rattrapage = sum(1 for v in grille.values() if v.rattrapage)
     print(
         f"{len(grille)} cases remplies sur {len(cellules())}"
         + (f" (dont {nb_rattrapage} en rattrapage)" if nb_rattrapage else "")
     )
+    libelles = {i[0]: i[1] for i in INTENTIONS}
+    creneaux_lib = {c[0]: c[1] for c in CRENEAUX}
+    for inten, cren, cause in raisons_cases_vides(candidats, grille, histo_videos):
+        print(f"    vide · {libelles[inten]} / {creneaux_lib[cren]} — {cause}")
 
     SORTIE.mkdir(parents=True, exist_ok=True)
     # L'identité est un fichier autonome : on le copie tel quel à côté de la
