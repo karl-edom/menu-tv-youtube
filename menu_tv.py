@@ -135,6 +135,14 @@ POIDS = {
 PENALITE_REDONDANCE = 0.60   # chaîne vue récemment
 PENALITE_RACOLAGE = 0.50     # titre en capitales, emojis, ponctuation excessive
 
+# Garde-fous de quota. Le quota YouTube est de 10 000 unités/jour ; on s'arrête
+# avant, pour finir la journée avec une page plutôt qu'avec un 403.
+PLAFOND_QUOTA = 9_000
+# Le repli de résolution coûte 100 unités l'appel. Sans plafond, une liste de
+# chaînes truffée de handles faux vide le quota en une passe et tue le run.
+# Les handles non traités sont reportés au lendemain, pas marqués en échec.
+BUDGET_RECHERCHE = 1_000     # soit 10 replis par run au maximum
+
 
 # --------------------------------------------------------------------------- #
 # Modèle
@@ -201,20 +209,37 @@ def ecrire_json(nom: str, donnees) -> None:
 # Accès API
 # --------------------------------------------------------------------------- #
 
+class QuotaEpuise(RuntimeError):
+    """Plus de budget. Ce n'est pas une erreur fatale : on publie ce qu'on a."""
+
+
 class Api:
     def __init__(self, cle: str):
         self.cle = cle
         self.session = requests.Session()
         self.unites = 0
+        self.recherches = 0     # unités dépensées en repli de résolution
+
+    def budget_restant(self) -> int:
+        return max(0, PLAFOND_QUOTA - self.unites)
 
     def get(self, ressource: str, cout: int = 1, **params):
+        if self.unites + cout > PLAFOND_QUOTA:
+            raise QuotaEpuise(
+                f"plafond interne atteint ({PLAFOND_QUOTA} unités)"
+            )
         params["key"] = self.cle
         r = self.session.get(f"{API}/{ressource}", params=params, timeout=30)
         self.unites += cout
+        if ressource == "search":
+            self.recherches += cout
         if r.status_code == 403:
+            détail = r.text[:300]
+            if "quota" in détail.lower():
+                raise QuotaEpuise("403 renvoyé par YouTube : quota épuisé")
             raise SystemExit(
-                "API refusée (403). Quota épuisé, ou API YouTube Data v3 non "
-                "activée sur le projet Google Cloud.\n" + r.text[:400]
+                "API refusée (403). L'API YouTube Data v3 n'est probablement "
+                "pas activée sur le projet Google Cloud.\n" + détail
             )
         r.raise_for_status()
         return r.json()
@@ -264,7 +289,7 @@ def resoudre_handles(api: Api, chaines: list[dict]):
     """
     cache = charger_json("channels.json", {})
     maintenant = datetime.now(timezone.utc)
-    echecs, secours = [], []
+    echecs, secours, reportes = [], [], []
 
     for c in chaines:
         h = c["handle"]
@@ -284,7 +309,17 @@ def resoudre_handles(api: Api, chaines: list[dict]):
             cache[h] = {"id": items[0]["id"], "nom": items[0]["snippet"]["title"]}
             continue
 
-        trouve = chercher_chaine(api, h)
+        # Le repli coûte 100 unités : on le rationne. Ce qui dépasse est
+        # reporté au lendemain plutôt que marqué en échec — sinon un simple
+        # manque de budget condamnerait la chaîne pour 30 jours.
+        if api.recherches + 100 > BUDGET_RECHERCHE:
+            reportes.append(h)
+            continue
+        try:
+            trouve = chercher_chaine(api, h)
+        except QuotaEpuise:
+            reportes.append(h)
+            continue
         if trouve:
             cache[h] = trouve
             secours.append((h, trouve["nom"], trouve["ressemblance"]))
@@ -293,7 +328,7 @@ def resoudre_handles(api: Api, chaines: list[dict]):
             echecs.append(h)
 
     ecrire_json("channels.json", cache)
-    return cache, echecs, secours
+    return cache, echecs, secours, reportes
 
 
 def lire_rss(chaine_id: str) -> list[dict]:
@@ -337,6 +372,10 @@ def enrichir(api: Api, ids: list[str]) -> dict[str, dict]:
     infos = {}
     for i in range(0, len(ids), 50):
         lot = ids[i : i + 50]
+        if api.budget_restant() < 1:
+            print(f"⚠ budget épuisé : {len(ids) - i} vidéos non enrichies",
+                  file=sys.stderr)
+            break
         rep = api.get(
             "videos",
             part="contentDetails,statistics,snippet",
@@ -846,20 +885,42 @@ def main():
             sys.exit("YT_API_KEY manquante. Voir le README.")
         api = Api(cle)
 
-        cache, echecs, secours = resoudre_handles(api, chaines)
+        try:
+            cache, echecs, secours, reportes = resoudre_handles(api, chaines)
+        except QuotaEpuise as e:
+            print(f"⚠ {e} pendant la résolution — on continue avec le cache",
+                  file=sys.stderr)
+            cache = charger_json("channels.json", {})
+            echecs, secours, reportes = [], [], []
         if secours:
             print("↻ résolus par recherche — À VÉRIFIER :")
             for h, nom, r in secours:
                 print(f"    {h:<28} → « {nom} »   (ressemblance {r})")
         if echecs:
-            print(f"⚠ introuvables, à corriger dans channels.yaml ({len(echecs)}) :",
+            print(f"✗ introuvables, à corriger dans channels.yaml ({len(echecs)}) :",
                   file=sys.stderr)
             for h in echecs:
                 print(f"    {h}", file=sys.stderr)
+        if reportes:
+            print(f"⏳ {len(reportes)} handles n'existent pas tels quels. Le repli "
+                  f"par recherche est rationné à {BUDGET_RECHERCHE // 100} par run, "
+                  f"ils seront retentés demain.")
+            print("   Le plus rapide reste de les corriger à la main dans "
+                  "channels.yaml :")
+            for h in reportes[:15]:
+                print(f"    {h}")
+            if len(reportes) > 15:
+                print(f"    … et {len(reportes) - 15} autres")
 
         actives = [
             c for c in chaines if cache.get(c["handle"], {}).get("id")
         ]
+        print(f"— {len(actives)}/{len(chaines)} chaînes résolues, "
+              f"{api.unites} unités consommées à ce stade")
+        if len(actives) < len(chaines) * 0.5:
+            print("⚠ moins de la moitié des chaînes sont résolues : la grille "
+                  "sera très creuse. Corrige channels.yaml avant tout.",
+                  file=sys.stderr)
         chaines_exportees = [
             {"id": cache[c["handle"]]["id"], "nom": cache[c["handle"]]["nom"],
              "handle": c["handle"], "intention": c["intention"], "langue": c["langue"]}
@@ -885,7 +946,12 @@ def main():
                 toutes.append(v)
                 a_enrichir.append(v.id)
 
-        infos = enrichir(api, a_enrichir)
+        try:
+            infos = enrichir(api, a_enrichir)
+        except QuotaEpuise as e:
+            print(f"⚠ {e} pendant l'enrichissement — page partielle",
+                  file=sys.stderr)
+            infos = {}
         for v in toutes:
             i = infos.get(v.id)
             if i:

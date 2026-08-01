@@ -2,8 +2,11 @@ name: Menu TV quotidien
 
 on:
   schedule:
-    # 06h00 UTC = 08h00 Paris en été, 07h00 en hiver.
-    - cron: "0 6 * * *"
+    # 06h17 UTC = 08h17 Paris en ete, 07h17 en hiver.
+    # Pas a l'heure pile : GitHub met les taches planifiees dans une file
+    # commune, et la minute 0 est celle que tout le monde choisit. Aux heures
+    # de pointe les runs y sont retardes, parfois abandonnes.
+    - cron: "17 6 * * *"
   workflow_dispatch: {}
 
 permissions:
