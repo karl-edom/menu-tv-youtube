@@ -35,6 +35,10 @@
   "id": "UCLLmx6mq1ninfIC1TrQ0w2g",
   "nom": "Alpha Cast"
  },
+ "@Amixem": {
+  "id": "UCgvqvBoSHB1ctlyyhoHrGwQ",
+  "nom": "Amixem"
+ },
  "@AppliedScience": {
   "id": "UCivA7_KLKWo43tFcCkFvydw",
   "nom": "Applied Science"
@@ -110,6 +114,10 @@
  "@ChrisFix": {
   "id": "UCes1EvRjcKU4sY_UEavndBw",
   "nom": "ChrisFix"
+ },
+ "@CinemaCinemas": {
+  "id": "UCQIrvVPHrt2cN14ktGA2Snw",
+  "nom": "Cinéma Cinémas"
  },
  "@ColdFusion": {
   "id": "UC4QZ_LsYcvcq7qOsOhpAX4A",
@@ -508,6 +516,14 @@
  "@hubermanlab": {
   "id": "UC2D2CMWXMOVWx7giW1n3LIg",
   "nom": "Andrew Huberman"
+ },
+ "@inoxtag": {
+  "id": "UCL9aTJb0ur4sovxcppAopEw",
+  "nom": "Inoxtag"
+ },
+ "@jimmycarr": {
+  "id": "UCf9BO33b-MnIxB5y0azrxmg",
+  "nom": "Jimmy Carr"
  },
  "@jontron": {
   "id": "UCNqENNwS0IHYNJmHEyhsP5w",
