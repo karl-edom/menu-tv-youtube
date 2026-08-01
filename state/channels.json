@@ -7,6 +7,20 @@
   "id": "UCwI-JbGNsojunnHbFAc0M4Q",
   "nom": "ARTE"
  },
+ "@ARTEfr": {
+  "id": "UCwI-JbGNsojunnHbFAc0M4Q",
+  "nom": "ARTE",
+  "resolu_par_recherche": true,
+  "ressemblance": 0.8
+ },
+ "@AbrahamOnTime": {
+  "date": "2026-08-01T06:45:54.750254+00:00",
+  "echec": true
+ },
+ "@AccentedCinema": {
+  "id": "UCH_VqR5rFFhgjZmM31xA3Ag",
+  "nom": "Accented Cinema"
+ },
  "@AdamSavagesTested": {
   "id": "UCiDJtJKMICpb9B1qf7qjEOA",
   "nom": "Adam Savage’s Tested",
@@ -16,6 +30,10 @@
  "@Adamneely": {
   "id": "UCnkp4xDOwqqJD7sSM3xdUiQ",
   "nom": "Adam Neely"
+ },
+ "@AlphaCast": {
+  "id": "UCLLmx6mq1ninfIC1TrQ0w2g",
+  "nom": "Alpha Cast"
  },
  "@AppliedScience": {
   "id": "UCivA7_KLKWo43tFcCkFvydw",
@@ -35,6 +53,18 @@
   "id": "UCS_7tplUgzJG4DhA16re5Yg",
   "nom": "Balade Mentale"
  },
+ "@BarelySociable": {
+  "id": "UC9PIn6-XuRKZ5HmYeu46AIw",
+  "nom": "Barely Sociable"
+ },
+ "@BazarDuGrenier": {
+  "id": "UCCMxHHciWRBBouzk-PGzmtQ",
+  "nom": "Bazar du Grenier"
+ },
+ "@BlacktailStudio": {
+  "id": "UC6I0KzAD7uFTL1qzxyunkvA",
+  "nom": "Blacktail Studio"
+ },
  "@Bolchegeek": {
   "id": "UCEfpbmshpf-G90fGLla73kA",
   "nom": "Bolchegeek"
@@ -47,15 +77,43 @@
   "id": "UCdp4_l1vPmpN-gDbUwhaRUQ",
   "nom": "Branch Education"
  },
+ "@BricoleurPro": {
+  "id": "UCDwuUuPfhL3bhBMb63-BbHQ",
+  "nom": "Bricoleur Pro"
+ },
  "@CGPGrey": {
   "id": "UC2C_jShtL725hvbm1arSV9w",
   "nom": "CGP Grey"
+ },
+ "@CalmosOfficiel": {
+  "id": "UCLhQhUTVz_9c-FOJCboAjoQ",
+  "nom": "Calmos officielle",
+  "resolu_par_recherche": true,
+  "ressemblance": 0.93
+ },
+ "@CestUneAutreHistoire": {
+  "id": "UCKjDY4joMPcoRMmd-G1yz1Q",
+  "nom": "C'est une autre histoire",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@Cestuneautrehistoire": {
   "id": "UCKjDY4joMPcoRMmd-G1yz1Q",
   "nom": "C'est une autre histoire",
   "resolu_par_recherche": true,
   "ressemblance": 1.0
+ },
+ "@ChefMichelDumas": {
+  "id": "UCSLyEx8ISkp567AjOAHYN5Q",
+  "nom": "Chef Michel Dumas"
+ },
+ "@ChrisFix": {
+  "id": "UCes1EvRjcKU4sY_UEavndBw",
+  "nom": "ChrisFix"
+ },
+ "@ColdFusion": {
+  "id": "UC4QZ_LsYcvcq7qOsOhpAX4A",
+  "nom": "ColdFusion"
  },
  "@ConfessionsdHistoire": {
   "id": "UCzj9-ZfpJ74vYv1RZzAWTVg",
@@ -79,6 +137,10 @@
   "id": "UCtqICqGbPSbTN09K1_7VZ3Q",
   "nom": "DirtyBiology"
  },
+ "@DrewGooden": {
+  "id": "UCjtkaY_1JrDw6uUtwvcPsTg",
+  "nom": "Drew Gooden"
+ },
  "@EconomicsExplained": {
   "id": "UCZ4AMrDcNrfy3X6nsU8-rPg",
   "nom": "Economics Explained"
@@ -87,9 +149,21 @@
   "id": "UCDq5v10l4wkV5-ZBIJJFbzQ",
   "nom": "Ethan Chlebowski"
  },
+ "@ExperimentBoy": {
+  "id": "UCAtKJ5eHYYxTKcwwn5-Mnhw",
+  "nom": "experimentboy"
+ },
  "@FallofCivilizations": {
   "id": "UCT6Y5JJPKe_JDMivpKgVXew",
   "nom": "Fall of Civilizations"
+ },
+ "@FascinatingHorror": {
+  "id": "UCFXad0mx4WxY1fXdbvtg0CQ",
+  "nom": "Fascinating Horror"
+ },
+ "@Feldup": {
+  "id": "UCQVaKQcp4OxSg1eC6SF3NTw",
+  "nom": "Feldup"
  },
  "@Fireship": {
   "id": "UCsBjURrPoezykLs9EqgamOA",
@@ -98,6 +172,24 @@
  "@Fouloscopie": {
   "id": "UCLXDNUOO3EQ80VmD9nQBHPg",
   "nom": "Fouloscopie"
+ },
+ "@FrancoisChartier": {
+  "id": "UCrReE_OVesbRltp6QQYssiQ",
+  "nom": "Chartier Créateur d'Harmonies"
+ },
+ "@GDIYPodcast": {
+  "date": "2026-08-01T06:45:54.750254+00:00",
+  "echec": true
+ },
+ "@GameMakersToolkit": {
+  "id": "UCqJ-Xo29CKyLTjn6z2XwYAw",
+  "nom": "Game Maker's Toolkit",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
+ "@GoldenMoustache": {
+  "id": "UCJruTcTs7Gn2Tk7YC-ENeHQ",
+  "nom": "Golden Moustache (M6)"
  },
  "@Heu7reka": {
   "id": "UC7sXGI8p8PvKosLWagkK9wQ",
@@ -123,9 +215,31 @@
   "id": "UChBEbMKI1eCcejTtmI32UEw",
   "nom": "Joshua Weissman"
  },
+ "@JoueurDuGrenier": {
+  "id": "UC_yP2DpIgs5Y1uWC0T03Chw",
+  "nom": "Joueur Du Grenier"
+ },
+ "@Konbini": {
+  "id": "UCHQda5vLxrH0Ff0I0kMq4zw",
+  "nom": "Konbini"
+ },
+ "@LAtelierdeRoxane": {
+  "id": "UC3rxwrZSiTp6Kk2RXcyHtCA",
+  "nom": "L'atelier de Roxane"
+ },
+ "@LEGEND": {
+  "id": "UC1bmqfyYrLIpKEsqo2IsZOA",
+  "nom": "Legend"
+ },
  "@LEMMiNO": {
   "id": "UCRcgy6GzDeccI7dkbbBna3Q",
   "nom": "LEMMiNO"
+ },
+ "@LaTronche": {
+  "id": "UCa0TfQbOEmZLrCY27k6bh7A",
+  "nom": "LaTronche",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@LaminuteAgricole": {
   "id": "UC9fjMXDS-UisVyNxYJVLp5A",
@@ -139,9 +253,17 @@
   "resolu_par_recherche": true,
   "ressemblance": 1.0
  },
+ "@LeMondefr": {
+  "id": "UCYpRDnhk5H8h16jpS84uqsA",
+  "nom": "Le Monde"
+ },
  "@LeReveilleur": {
   "id": "UC1EacOJoqsKaYxaDomTCTEQ",
   "nom": "Le Réveilleur"
+ },
+ "@LeVortexOfficiel": {
+  "date": "2026-08-01T06:45:54.750254+00:00",
+  "echec": true
  },
  "@LesRevueursOfficiel": {
   "date": "2026-07-31T22:00:30.152111+00:00",
@@ -155,9 +277,19 @@
   "id": "UCfXXAQ-mp1uUcvSpvMcAAtw",
   "nom": "LinksTheSun"
  },
+ "@MajorMouvement": {
+  "id": "UCsnRkRtbTyISkfGTGwM7VfQ",
+  "nom": "Major Mouvement"
+ },
  "@Mathologer": {
   "id": "UC1_uAIS3r8Vu6JjXWvastJg",
   "nom": "Mathologer"
+ },
+ "@McFlyetCarlito": {
+  "id": "UCDPK_MTu3uTUFJXRVcTJcEw",
+  "nom": "Mcfly et Carlito",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@Micode": {
   "id": "UCYnvxJ-PKiGXo_tYXpWAC-w",
@@ -166,6 +298,10 @@
  "@MonsieurSam": {
   "id": "UCZwoKGqkW7vsmxLtD8jk7dQ",
   "nom": "Monsieur Sam"
+ },
+ "@NakeyJakey": {
+  "id": "UCSdma21fnJzgmPodhC9SJ3g",
+  "nom": "NakeyJakey"
  },
  "@NatGeo": {
   "id": "UCpVm7bg6pXKo1Pr6k5kxG9A",
@@ -179,9 +315,23 @@
   "id": "UCJkMlOu7faDgqh4PfzbpLdg",
   "nom": "Nerdwriter1"
  },
+ "@Nicolas_Vitiello": {
+  "id": "UCFL6ZZTFon_DFEu7MOprv3A",
+  "nom": "Nicolas Vitiello",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
+ "@NileRed": {
+  "id": "UCFhXFikryT4aFcLkLw2LBLA",
+  "nom": "NileRed"
+ },
  "@Nilered": {
   "id": "UCFhXFikryT4aFcLkLw2LBLA",
   "nom": "NileRed"
+ },
+ "@Noclip": {
+  "id": "UCKx9fycSal6edp34DQXt3lw",
+  "nom": "Noclip"
  },
  "@NotaBeneMovies": {
   "id": "UCP46_MXP_WG_auH88FnfS1A",
@@ -203,6 +353,10 @@
   "id": "UCgNg3vwj3xt7QOrcIDaHdFg",
   "nom": "PolyMatter"
  },
+ "@PracticalEngineeringChannel": {
+  "id": "UCMOqf8ab-42UUQIdVoKwjlQ",
+  "nom": "Practical Engineering"
+ },
  "@Practical_Engineering": {
   "id": "UCMOqf8ab-42UUQIdVoKwjlQ",
   "nom": "Practical Engineering",
@@ -216,6 +370,10 @@
  "@ScienceEtonnante": {
   "id": "UCaNlbnghtwlsGF-KzAFThqA",
   "nom": "ScienceEtonnante"
+ },
+ "@Scilabus": {
+  "id": "UCeR8BYZS7IHYjk_9Mh5JgkA",
+  "nom": "Scilabus"
  },
  "@SlowMoGuys": {
   "id": "UCUK0HBIBWgM2c4vsPhkYY4w",
@@ -231,9 +389,19 @@
   "id": "UCtI0Hodo5o5dUb67FeUjDeA",
   "nom": "SpaceX"
  },
+ "@SquatUniversity": {
+  "id": "UCyPYQTT20IgzVw92LDvtClw",
+  "nom": "Squat University"
+ },
  "@Squeezie": {
   "id": "UCWeg2Pkate69NFdBeuRFTAw",
   "nom": "SQUEEZIE"
+ },
+ "@Steve Mould": {
+  "id": "UCEIwxahdLz7bap-VDs9h35A",
+  "nom": "Steve Mould",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@StuffMadeHere": {
   "id": "UCj1VqrHhDte54oLgPG4xpuQ",
@@ -257,6 +425,16 @@
   "id": "UCy0tKL1T7wFoYcxCe0xjN6Q",
   "nom": "Technology Connections"
  },
+ "@TheCinemaCartography": {
+  "id": "UCdwi3hYqTyrmmxPEchqbEDA",
+  "nom": "The Cinema Cartography",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
+ "@TheDiaryOfACEO": {
+  "id": "UCGq-a57w-aPwyi3pW7XLiHw",
+  "nom": "The Diary Of A CEO"
+ },
  "@ThisOldTony": {
   "id": "UC5NO8MgTQKHAWXp6z8Xl7yQ",
   "nom": "This Old Tony"
@@ -264,6 +442,10 @@
  "@ThomasFlight": {
   "id": "UCUyvQV2JsICeLZP4c_h40kA",
   "nom": "Thomas Flight"
+ },
+ "@TiboInShape": {
+  "id": "UCpWaR3gNAQGsX48cIlQC0qw",
+  "nom": "Tibo InShape"
  },
  "@TomScottGo": {
   "id": "UCBa659QWEk1AI4Tg--mrJ2A",
@@ -285,6 +467,10 @@
   "id": "UC9RM-iSvTu1uPJb8X5yp3EQ",
   "nom": "Wendover Productions"
  },
+ "@ZeratoR": {
+  "id": "UCZ_oIYI9ZNpOfWbpZxWNuRQ",
+  "nom": "ZeratoR"
+ },
  "@bbcearth": {
   "id": "UCwmZiChSryoWQCZMIQezgTg",
   "nom": "BBC Earth"
@@ -295,9 +481,33 @@
   "resolu_par_recherche": true,
   "ressemblance": 1.0
  },
+ "@blastinfo": {
+  "id": "UC__xRB5L4toU9yYawt_lIKg",
+  "nom": "BLAST, Le souffle de l'info"
+ },
+ "@bloomberg": {
+  "id": "UCrM7B7SL_g1edFOnmj-SDKg",
+  "nom": "Bloomberg Tech",
+  "resolu_par_recherche": true,
+  "ressemblance": 0.82
+ },
+ "@dannygonzalez": {
+  "id": "UCSUf5_EPEfl4zlBKZHkZdmw",
+  "nom": "Danny Gonzalez",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
  "@datagueule": {
   "id": "UCm5wThREh298TkK8hCT9HuA",
   "nom": "Data Gueule"
+ },
+ "@gcn": {
+  "id": "UCuTaETsuCOkJ0H_GAztWt0Q",
+  "nom": "Global Cycling Network"
+ },
+ "@hubermanlab": {
+  "id": "UC2D2CMWXMOVWx7giW1n3LIg",
+  "nom": "Andrew Huberman"
  },
  "@jontron": {
   "id": "UCNqENNwS0IHYNJmHEyhsP5w",
@@ -307,20 +517,56 @@
   "id": "UCsXVk37bltHxD1rDPwtNM8Q",
   "nom": "Kurzgesagt – In a Nutshell"
  },
+ "@lexfridman": {
+  "id": "UCSHZKyawb77ixDdsGog4iWA",
+  "nom": "Lex Fridman"
+ },
  "@numberphile": {
   "id": "UCoxcjq-8xIDTYp3uz647V5A",
   "nom": "Numberphile"
+ },
+ "@palmashow": {
+  "id": "UCoZoRz4-y6r87ptDp4Jk74g",
+  "nom": "Palmashow"
  },
  "@primitivetechnology": {
   "id": "UCzPsEwQIN1jHfDHUPjhHIgA",
   "nom": "primitivetechnology"
  },
+ "@redbull": {
+  "id": "UCblfuW_4rakIf2h6aqANefA",
+  "nom": "Red Bull"
+ },
  "@sixtysymbols": {
   "id": "UCvBqzzvUBLCs8Y7Axb-jZew",
   "nom": "Sixty Symbols"
  },
+ "@tested": {
+  "id": "UCiDJtJKMICpb9B1qf7qjEOA",
+  "nom": "Adam Savage’s Tested"
+ },
+ "@theslowmoguys": {
+  "id": "UCUK0HBIBWgM2c4vsPhkYY4w",
+  "nom": "The Slow Mo Guys"
+ },
+ "@thinkerview": {
+  "id": "UCQgWpmt02UtJkyO32HGUASQ",
+  "nom": "Thinkerview"
+ },
+ "@ushuaiatv": {
+  "id": "UCLCyp2cCf8-O9ZaZnVrs-og",
+  "nom": "ushuaiatv"
+ },
  "@veritasium": {
   "id": "UCHnyfMqiRRG1u-2MsSQLbXA",
   "nom": "Veritasium"
+ },
+ "@videogamedunkey": {
+  "id": "UCsvn_Po0SmunchJYOWpOxMg",
+  "nom": "videogamedunkey"
+ },
+ "@yogawithadriene": {
+  "id": "UCFKE7WVJfvaHW5q283SxchA",
+  "nom": "Yoga With Adriene"
  }
 }
