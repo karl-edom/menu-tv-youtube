@@ -86,6 +86,7 @@ chaines:
   - {handle: "@LinksTheSun",            intention: oeuvres, langue: fr}
   - {handle: "@CalmosOfficiel",         intention: oeuvres, langue: fr}
   - {handle: "@LeVortexOfficiel",       intention: oeuvres, langue: fr}
+  - {handle: "@CinemaCinemas",          intention: oeuvres, langue: fr}
   - {handle: "@Nerdwriter1",            intention: oeuvres, langue: en}
   - {handle: "@ThomasFlight",           intention: oeuvres, langue: en}
   - {handle: "@LikeStoriesofOld",       intention: oeuvres, langue: en}
@@ -174,6 +175,9 @@ chaines:
   - {handle: "@McFlyetCarlito",         intention: rire, langue: fr}
   - {handle: "@palmashow",              intention: rire, langue: fr}
   - {handle: "@GoldenMoustache",        intention: rire, langue: fr}
+  - {handle: "@Amixem",                 intention: rire, langue: fr}
+  - {handle: "@inoxtag",                intention: rire, langue: fr}
   - {handle: "@jontron",                intention: rire, langue: en}
   - {handle: "@DrewGooden",             intention: rire, langue: en}
   - {handle: "@dannygonzalez",          intention: rire, langue: en}
+  - {handle: "@jimmycarr",              intention: rire, langue: en}

@@ -18,7 +18,48 @@
     historique: "menu-tv:historique",
     reports: "menu-tv:reports",
     souhaits: "menu-tv:souhaits",
+    theme: "menu-tv:theme",
   };
+
+  /* Trois états, pas deux : « auto » suit le système et doit rester
+     joignable, sinon quelqu'un qui bascule une fois ne retrouve jamais le
+     comportement par défaut. */
+  const THEMES = [
+    { cle: "auto",  libelle: "Auto" },
+    { cle: "light", libelle: "Clair" },
+    { cle: "dark",  libelle: "Sombre" },
+  ];
+
+  function appliquerTheme(cle) {
+    const html = document.documentElement;
+    if (cle === "auto") html.removeAttribute("data-theme");
+    else html.setAttribute("data-theme", cle);
+    const t = THEMES.find((x) => x.cle === cle) || THEMES[0];
+    const zone = document.querySelector("[data-zone=theme-libelle]");
+    if (zone) zone.textContent = t.libelle;
+    const bouton = document.querySelector("[data-role=basculer-theme]");
+    if (bouton) {
+      const suivant = THEMES[(THEMES.indexOf(t) + 1) % THEMES.length];
+      bouton.setAttribute(
+        "aria-label",
+        `Thème : ${t.libelle}. Cliquer pour passer à ${suivant.libelle}.`
+      );
+    }
+  }
+
+  function brancherTheme() {
+    let courant = lire(CLES.theme, "auto");
+    if (!THEMES.some((t) => t.cle === courant)) courant = "auto";
+    appliquerTheme(courant);
+    const bouton = document.querySelector("[data-role=basculer-theme]");
+    if (!bouton) return;
+    bouton.addEventListener("click", () => {
+      const i = THEMES.findIndex((t) => t.cle === courant);
+      courant = THEMES[(i + 1) % THEMES.length].cle;
+      ecrire(CLES.theme, courant);
+      appliquerTheme(courant);
+    });
+  }
 
   const MEMOIRE_JOURS = 240;
 
@@ -454,6 +495,7 @@
     return; // on laisse la grille rendue par le serveur
   }
 
+  brancherTheme();
   rendre(donnees);
   brancherActions(donnees);
   brancherPanneau(donnees);

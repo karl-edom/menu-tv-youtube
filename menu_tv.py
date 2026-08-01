@@ -680,8 +680,15 @@ GABARIT = """<!doctype html>
 <title>Menu TV — {date}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="k-taisho.css">
 <link rel="stylesheet" href="theme.css">
+<script>
+/* Appliqué AVANT le premier rendu : sinon la page s'affiche une fraction de
+   seconde dans le mauvais mode. C'est la seule raison d'un script en tête. */
+(function(){{try{{var t=localStorage.getItem("menu-tv:theme");
+if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}}catch(e){{}}}})();
+</script>
 </head><body class="af">
 <header class="af-entete">
   <div class="af-entete__date">{date_longue}</div>
@@ -690,6 +697,8 @@ GABARIT = """<!doctype html>
      aujourd'hui, une par case. Rien de plus. Ce qui a déjà été proposé ne reviendra
      pas avant {memoire} jours.</p>
   <div class="af-barre">
+    <button type="button" class="af-bouton af-bascule" data-role="basculer-theme"
+            aria-live="polite"><span data-zone="theme-libelle">Auto</span></button>
     <button type="button" class="af-bouton" data-role="basculer-panneau"
             aria-expanded="false" aria-controls="panneau">Réglages</button>
     <span class="af-annonce" role="status" aria-live="polite" data-zone="annonce"></span>
@@ -1053,14 +1062,15 @@ def main():
     SORTIE.mkdir(parents=True, exist_ok=True)
     # L'identité est un fichier autonome : on le copie tel quel à côté de la
     # page. Le remplacer suffit à changer l'apparence, sans retoucher ce code.
-    feuille = RACINE / "theme" / "theme.css"
-    if feuille.exists():
-        (SORTIE / "theme.css").write_text(
-            feuille.read_text(encoding="utf-8"), encoding="utf-8"
-        )
-    else:
-        print("⚠ theme/theme.css introuvable — page sans mise en forme",
-              file=sys.stderr)
+    for nom in ("k-taisho.css", "theme.css"):
+        feuille = RACINE / "theme" / nom
+        if feuille.exists():
+            (SORTIE / nom).write_text(
+                feuille.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+        else:
+            print(f"⚠ theme/{nom} introuvable — page sans mise en forme",
+                  file=sys.stderr)
 
     script = RACINE / "app.js"
     if script.exists():

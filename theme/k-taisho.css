@@ -1,0 +1,538 @@
+/* ============================================================================
+   CHARTE K — SYSTÈME TAISHŌ                                        theme.css
+   Système de design de Karl Edom. Version 1.0 — juillet 2026.
+
+   Référence : l'affiche imprimée japonaise des années 1920 (ère Taishō) —
+   papier non blanchi, encre grasse, un vermillon franc, un indigo profond,
+   une dorure rare, et beaucoup de vide.
+
+   Toutes les rampes sont générées en OKLCH (pas de hex choisi à l'œil) puis
+   ramenées dans le gamut sRGB. Les ratios de contraste indiqués en commentaire
+   sont mesurés, pas estimés.
+
+   USAGE
+     <link rel="stylesheet" href="theme.css">
+     <html data-theme="light">   ← ou "dark", ou rien pour suivre l'OS
+   Puis n'utilisez QUE les tokens sémantiques (§3). Les primitives (§2) ne
+   doivent jamais apparaître dans du code applicatif.
+   ========================================================================= */
+
+/* ─── §1 · TYPOGRAPHIE — chargement ─────────────────────────────────────────
+   Trois familles, toutes libres (SIL OFL), disponibles sur Google Fonts et
+   installables en local pour PowerPoint / Word / Python.
+
+   Shippori Mincho B1 — 志ほり明朝. Un mincho dessiné pour évoquer la typographie
+     au plomb de l'imprimerie japonaise d'avant-guerre. C'est LA signature de la
+     charte : personne ne l'utilise en contexte francophone.
+   Zen Kaku Gothic New — 全角ゴシック. Sans-serif humaniste, même écosystème
+     typographique, excellente en interface et en petits corps.
+   IBM Plex Mono — chiffres tabulaires, code, étiquettes d'axes.
+
+   Auto-hébergement recommandé en production (npm i @fontsource/shippori-mincho-b1
+   @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono).                */
+
+
+
+/* ─── §2 · PRIMITIVES — les neuf rampes ─────────────────────────────────────
+   Ne jamais consommer directement dans un composant. Elles existent pour
+   alimenter le §3.                                                          */
+
+:root {
+  /* 朱 SHU — vermillon. La couleur signature. */
+  --k-shu-25: #FFF8F5;  --k-shu-50: #FFEFE9;  --k-shu-100: #FFE0D6;
+  --k-shu-200: #FFC7B7;  --k-shu-300: #FFA28C;  --k-shu-400: #FE7A5F;
+  --k-shu-500: #E55438;  --k-shu-600: #C3371B;  --k-shu-700: #9D2206;
+  --k-shu-800: #751401;  --k-shu-900: #4D0900;  --k-shu-950: #2E0300;
+
+  /* 藍 AI — indigo. Le contrepoint froid, la nuit de l'affiche. */
+  --k-ai-25: #F7FBFF;  --k-ai-50: #EDF7FF;  --k-ai-100: #DDEDFF;
+  --k-ai-200: #C0DCFF;  --k-ai-300: #9DC5FF;  --k-ai-400: #78A8F0;
+  --k-ai-500: #578BD9;  --k-ai-600: #3E70B9;  --k-ai-700: #2A5695;
+  --k-ai-800: #1C3E6F;  --k-ai-900: #0F2649;  --k-ai-950: #05142C;
+
+  /* 墨 SUMI — l'encre et le papier. Neutre chaud (jamais de gris froid). */
+  --k-sumi-25: #FEFBF9;  --k-sumi-50: #FAF6F2;  --k-sumi-100: #F3ECE6;
+  --k-sumi-200: #E5DCD5;  --k-sumi-300: #C7C1BD;  --k-sumi-400: #ACA6A0;
+  --k-sumi-500: #918984;  --k-sumi-600: #756F69;  --k-sumi-700: #5B5551;
+  --k-sumi-800: #423D3A;  --k-sumi-900: #26221E;  --k-sumi-950: #15110E;
+
+  /* 金 KIN — or / ambre. La dorure : rare, jamais un aplat. */
+  --k-kin-25: #FFFAF2;  --k-kin-50: #FFF4E5;  --k-kin-100: #FDE8CE;
+  --k-kin-200: #F8D3A3;  --k-kin-300: #ECB870;  --k-kin-400: #D99935;
+  --k-kin-500: #C07A00;  --k-kin-600: #9D6100;  --k-kin-700: #7C4A00;
+  --k-kin-800: #5C3400;  --k-kin-900: #3C1F00;  --k-kin-950: #240F00;
+
+  /* 常盤 MATSUBA — vert pin. */
+  --k-matsuba-25: #F6FDF8;  --k-matsuba-50: #ECFAEF;  --k-matsuba-100: #DBF3E1;
+  --k-matsuba-200: #BCE7C6;  --k-matsuba-300: #96D4A6;  --k-matsuba-400: #6DBB84;
+  --k-matsuba-500: #47A064;  --k-matsuba-600: #29844B;  --k-matsuba-700: #146736;
+  --k-matsuba-800: #094B25;  --k-matsuba-900: #043015;  --k-matsuba-950: #011B09;
+
+  /* 藤 FUJI — glycine. */
+  --k-fuji-25: #FDF9FF;  --k-fuji-50: #FAF2FF;  --k-fuji-100: #F3E6FE;
+  --k-fuji-200: #E7CFFA;  --k-fuji-300: #D4B3EF;  --k-fuji-400: #BD93DC;
+  --k-fuji-500: #A274C3;  --k-fuji-600: #865AA5;  --k-fuji-700: #694384;
+  --k-fuji-800: #4D2F61;  --k-fuji-900: #311C3F;  --k-fuji-950: #1C0D25;
+
+  /* 浅葱 ASAGI — bleu-vert pâle. */
+  --k-asagi-25: #F4FDFE;  --k-asagi-50: #E8FAFC;  --k-asagi-100: #D3F3F7;
+  --k-asagi-200: #ACE6ED;  --k-asagi-300: #7AD3DD;  --k-asagi-400: #3EBAC7;
+  --k-asagi-500: #009FAD;  --k-asagi-600: #00828F;  --k-asagi-700: #006570;
+  --k-asagi-800: #004A53;  --k-asagi-900: #002F36;  --k-asagi-950: #001B1F;
+
+  /* 鴇 TOKI — rose ibis. */
+  --k-toki-25: #FFF8FC;  --k-toki-50: #FFF0F7;  --k-toki-100: #FFE2EE;
+  --k-toki-200: #FFC8DF;  --k-toki-300: #F4A9C9;  --k-toki-400: #E186AF;
+  --k-toki-500: #C76593;  --k-toki-600: #A84B78;  --k-toki-700: #86365D;
+  --k-toki-800: #632544;  --k-toki-900: #40152B;  --k-toki-950: #260917;
+
+  /* 紅 BENI — carmin. */
+  --k-beni-25: #FFF8F6;  --k-beni-50: #FFEFED;  --k-beni-100: #FFE0DC;
+  --k-beni-200: #FFC6BF;  --k-beni-300: #FFA29A;  --k-beni-400: #F87C75;
+  --k-beni-500: #DF5854;  --k-beni-600: #BE3C3B;  --k-beni-700: #992728;
+  --k-beni-800: #71191A;  --k-beni-900: #4A0D0E;  --k-beni-950: #2D0405;
+}
+
+/* ─── §3 · TOKENS SÉMANTIQUES — MODE CLAIR (par défaut) ────────────────────
+   Le mode de référence : encre sur papier non blanchi.                      */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces — du plus enfoncé au plus saillant */
+  --k-bg-sunken:     var(--k-sumi-100);  /* fonds de puits, zones inactives   */
+  --k-bg-page:       var(--k-sumi-50);   /* le papier : fond de page          */
+  --k-bg-surface:    var(--k-sumi-25);   /* cartes, panneaux, surface de chart*/
+  --k-bg-raised:     #FFFFFF;            /* popovers, menus, modales          */
+  --k-bg-inverse:    var(--k-sumi-900);  /* bandeaux d'encre pleine page      */
+  --k-bg-hover:      rgba(38, 34, 30, .045);
+  --k-bg-active:     rgba(38, 34, 30, .085);
+  --k-bg-selected:   var(--k-shu-50);
+
+  /* Encre — contrastes mesurés sur --k-bg-page */
+  --k-ink-primary:   var(--k-sumi-900);  /* 14.7:1                            */
+  --k-ink-secondary: var(--k-sumi-700);  /*  6.8:1                            */
+  --k-ink-muted:     var(--k-sumi-600);  /*  4.6:1 — plancher pour du texte   */
+  --k-ink-faint:     var(--k-sumi-500);  /*  3.2:1 — décor uniquement         */
+  --k-ink-inverse:   var(--k-sumi-25);
+  --k-ink-accent:    var(--k-shu-700);   /*  7.3:1 — liens, texte accentué    */
+  --k-ink-link:      var(--k-shu-700);
+  --k-ink-link-hover:var(--k-shu-800);
+
+  /* Traits — l'affiche imprimée ne connaît que le filet */
+  --k-line-hairline: rgba(38, 34, 30, .10);  /* séparateurs, grilles          */
+  --k-line-subtle:   rgba(38, 34, 30, .16);  /* bordures de champs            */
+  --k-line-strong:   rgba(38, 34, 30, .34);  /* encadrés, tableaux            */
+  --k-line-ink:      var(--k-sumi-900);      /* filet d'encre pleine          */
+  --k-line-accent:   var(--k-shu-600);
+
+  /* Marque */
+  --k-brand:            var(--k-shu-600);  /* le vermillon d'action           */
+  --k-brand-hover:      var(--k-shu-700);
+  --k-brand-active:     var(--k-shu-800);
+  --k-brand-on:         var(--k-sumi-25);  /* 5.3:1 sur --k-brand             */
+  --k-brand-subtle:     var(--k-shu-50);
+  --k-brand-subtle-ink: var(--k-shu-800);
+  --k-brand-2:          var(--k-ai-800);   /* l'indigo, second pôle           */
+  --k-brand-2-on:       var(--k-sumi-25);  /* 10.4:1                          */
+  --k-brand-gold:       var(--k-kin-500);  /* la dorure : accent rare         */
+  --k-brand-gold-on:    var(--k-sumi-900);
+
+  /* Focus — anneau vermillon, jamais le bleu système */
+  --k-focus-ring:   var(--k-shu-600);
+  --k-focus-halo:   rgba(195, 55, 27, .22);
+  --k-focus-width:  2px;
+  --k-focus-offset: 2px;
+
+  /* Statut — TOUJOURS accompagné d'une icône et d'un mot. Jamais la couleur seule. */
+  --k-status-good:      var(--k-matsuba-600);  /* 4.5:1                       */
+  --k-status-warning:   var(--k-kin-400);      /* 2.4:1 — icône+libellé requis*/
+  --k-status-serious:   var(--k-shu-400);      /* 2.5:1 — icône+libellé requis*/
+  --k-status-critical:  var(--k-beni-600);     /* 5.2:1                       */
+  --k-status-good-bg:      var(--k-matsuba-50);
+  --k-status-warning-bg:   var(--k-kin-50);
+  --k-status-serious-bg:   var(--k-shu-50);
+  --k-status-critical-bg:  var(--k-beni-50);
+  --k-delta-up:   var(--k-matsuba-700);  /* 6.5:1 — texte de variation       */
+  --k-delta-down: var(--k-beni-700);     /* 7.3:1                            */
+
+  /* Ombres — l'imprimé ne flotte pas. Filet d'abord, ombre ensuite. */
+  --k-shadow-0: none;
+  --k-shadow-1: 0 1px 1px rgba(38, 34, 30, .05);
+  --k-shadow-2: 0 1px 2px rgba(38, 34, 30, .06), 0 4px 10px -4px rgba(38, 34, 30, .10);
+  --k-shadow-3: 0 2px 4px rgba(38, 34, 30, .06), 0 16px 36px -14px rgba(38, 34, 30, .22);
+  --k-shadow-press: inset 0 1px 2px rgba(38, 34, 30, .18);   /* effet foulage */
+
+  /* Dégradés — voir §5 pour la doctrine d'emploi */
+  --k-grad-shu:      linear-gradient(135deg, #E55438 0%, #9D2206 100%);
+  --k-grad-ai:       linear-gradient(135deg, #578BD9 0%, #1C3E6F 100%);
+  --k-grad-sumi:     linear-gradient(180deg, #1C3E6F 0%, #26221E 100%);
+  --k-grad-yugure:   linear-gradient(155deg, #FFA28C 0%, #E55438 30%, #992728 58%, #102748 100%);
+  --k-grad-akatsuki: linear-gradient(150deg, #FCC9DE 0%, #FE7A5F 46%, #C07A00 100%);
+  --k-grad-washi:    linear-gradient(180deg, #FEFBF9 0%, #F3ECE6 100%);
+  --k-grad-kin:      linear-gradient(100deg, #7C4A00 0%, #EBB874 20%, #FFF4E5 34%,
+                                              #D99935 50%, #7C4A00 74%, #EBB874 100%);
+  --k-grad-hairline: linear-gradient(90deg, transparent, rgba(38,34,30,.28) 18%,
+                                            rgba(38,34,30,.28) 82%, transparent);
+
+  /* Data-viz — palette catégorielle, ordre FIGÉ (voir §6) */
+  --k-viz-surface: var(--k-sumi-25);
+  --k-viz-1: var(--k-shu-500);      /* 朱 vermillon  */
+  --k-viz-2: var(--k-ai-500);       /* 藍 indigo     */
+  --k-viz-3: var(--k-matsuba-500);  /* 常盤 vert     */
+  --k-viz-4: var(--k-fuji-500);     /* 藤 glycine    */
+  --k-viz-5: var(--k-beni-500);     /* 紅 carmin     */
+  --k-viz-6: var(--k-asagi-500);    /* 浅葱 bleu-vert*/
+  --k-viz-7: var(--k-kin-500);      /* 金 or         */
+  --k-viz-8: var(--k-toki-500);     /* 鴇 rose       */
+  --k-viz-grid:     rgba(38, 34, 30, .08);
+  --k-viz-axis:     rgba(38, 34, 30, .22);
+  --k-viz-diverge-mid: var(--k-sumi-200);
+}
+
+/* ─── §4 · TOKENS SÉMANTIQUES — MODE SOMBRE ───────────────────────────────
+   Ce n'est PAS une inversion automatique : chaque valeur est re-choisie sur
+   la rampe pour la surface sombre, puis re-mesurée.                         */
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) { color-scheme: dark;
+    --k-bg-sunken:  #0D0A08;             --k-bg-page:    var(--k-sumi-950);
+    --k-bg-surface: #1F1B17;             --k-bg-raised:  #282320;
+    --k-bg-inverse: var(--k-sumi-50);
+    --k-bg-hover:   rgba(250,246,242,.06);
+    --k-bg-active:  rgba(250,246,242,.11);
+    --k-bg-selected:rgba(229, 84, 56, .16);
+    --k-ink-primary:  var(--k-sumi-50);   /* 17.5:1 */
+    --k-ink-secondary:var(--k-sumi-300);  /* 10.5:1 */
+    --k-ink-muted:    var(--k-sumi-400);  /*  7.8:1 */
+    --k-ink-faint:    var(--k-sumi-500);  /*  5.5:1 */
+    --k-ink-inverse:  var(--k-sumi-900);
+    --k-ink-accent:   var(--k-shu-300);   /*  9.7:1 */
+    --k-ink-link:     var(--k-shu-300);
+    --k-ink-link-hover: var(--k-shu-200);
+    --k-line-hairline: rgba(250,246,242,.11);
+    --k-line-subtle:   rgba(250,246,242,.18);
+    --k-line-strong:   rgba(250,246,242,.34);
+    --k-line-ink:      var(--k-sumi-50);
+    --k-line-accent:   var(--k-shu-400);
+    --k-brand:      var(--k-shu-500);  --k-brand-hover: var(--k-shu-400);
+    --k-brand-active: var(--k-shu-300);--k-brand-on:    var(--k-sumi-950);
+    --k-brand-subtle: rgba(229,84,56,.14); --k-brand-subtle-ink: var(--k-shu-200);
+    --k-brand-2:    var(--k-ai-400);   --k-brand-2-on:  var(--k-sumi-950);
+    --k-brand-gold: var(--k-kin-300);  --k-brand-gold-on: var(--k-sumi-950);
+    --k-focus-ring: var(--k-shu-400);  --k-focus-halo:  rgba(254,122,95,.26);
+    --k-status-good:     var(--k-matsuba-600);  /* 3.7:1 */
+    --k-status-warning:  var(--k-kin-400);      /* 7.0:1 */
+    --k-status-serious:  var(--k-shu-400);      /* 6.7:1 */
+    --k-status-critical: var(--k-beni-600);     /* 3.2:1 */
+    --k-status-good-bg:     rgba(41,132,75,.18);
+    --k-status-warning-bg:  rgba(217,153,53,.16);
+    --k-status-serious-bg:  rgba(254,122,95,.14);
+    --k-status-critical-bg: rgba(190,60,59,.18);
+    --k-delta-up:   var(--k-matsuba-400); /* 8.1:1 */
+    --k-delta-down: var(--k-beni-400);    /* 7.3:1 */
+    --k-shadow-1: 0 1px 1px rgba(0,0,0,.40);
+    --k-shadow-2: 0 1px 2px rgba(0,0,0,.44), 0 4px 10px -4px rgba(0,0,0,.56);
+    --k-shadow-3: 0 2px 4px rgba(0,0,0,.44), 0 16px 36px -14px rgba(0,0,0,.70);
+    --k-shadow-press: inset 0 1px 2px rgba(0,0,0,.50);
+    --k-grad-washi: linear-gradient(180deg, #1F1B17 0%, #15110E 100%);
+    --k-grad-hairline: linear-gradient(90deg, transparent, rgba(250,246,242,.30) 18%,
+                                              rgba(250,246,242,.30) 82%, transparent);
+    --k-viz-surface: #1F1B17;
+    --k-viz-grid: rgba(250,246,242,.09);
+    --k-viz-axis: rgba(250,246,242,.24);
+    --k-viz-diverge-mid: var(--k-sumi-800);
+  }
+}
+
+:root[data-theme="dark"] { color-scheme: dark;
+  --k-bg-sunken:  #0D0A08;             --k-bg-page:    var(--k-sumi-950);
+  --k-bg-surface: #1F1B17;             --k-bg-raised:  #282320;
+  --k-bg-inverse: var(--k-sumi-50);
+  --k-bg-hover:   rgba(250,246,242,.06);
+  --k-bg-active:  rgba(250,246,242,.11);
+  --k-bg-selected:rgba(229, 84, 56, .16);
+  --k-ink-primary:  var(--k-sumi-50);
+  --k-ink-secondary:var(--k-sumi-300);
+  --k-ink-muted:    var(--k-sumi-400);
+  --k-ink-faint:    var(--k-sumi-500);
+  --k-ink-inverse:  var(--k-sumi-900);
+  --k-ink-accent:   var(--k-shu-300);
+  --k-ink-link:     var(--k-shu-300);
+  --k-ink-link-hover: var(--k-shu-200);
+  --k-line-hairline: rgba(250,246,242,.11);
+  --k-line-subtle:   rgba(250,246,242,.18);
+  --k-line-strong:   rgba(250,246,242,.34);
+  --k-line-ink:      var(--k-sumi-50);
+  --k-line-accent:   var(--k-shu-400);
+  --k-brand:      var(--k-shu-500);  --k-brand-hover: var(--k-shu-400);
+  --k-brand-active: var(--k-shu-300);--k-brand-on:    var(--k-sumi-950);
+  --k-brand-subtle: rgba(229,84,56,.14); --k-brand-subtle-ink: var(--k-shu-200);
+  --k-brand-2:    var(--k-ai-400);   --k-brand-2-on:  var(--k-sumi-950);
+  --k-brand-gold: var(--k-kin-300);  --k-brand-gold-on: var(--k-sumi-950);
+  --k-focus-ring: var(--k-shu-400);  --k-focus-halo:  rgba(254,122,95,.26);
+  --k-status-good:     var(--k-matsuba-600);
+  --k-status-warning:  var(--k-kin-400);
+  --k-status-serious:  var(--k-shu-400);
+  --k-status-critical: var(--k-beni-600);
+  --k-status-good-bg:     rgba(41,132,75,.18);
+  --k-status-warning-bg:  rgba(217,153,53,.16);
+  --k-status-serious-bg:  rgba(254,122,95,.14);
+  --k-status-critical-bg: rgba(190,60,59,.18);
+  --k-delta-up:   var(--k-matsuba-400);
+  --k-delta-down: var(--k-beni-400);
+  --k-shadow-1: 0 1px 1px rgba(0,0,0,.40);
+  --k-shadow-2: 0 1px 2px rgba(0,0,0,.44), 0 4px 10px -4px rgba(0,0,0,.56);
+  --k-shadow-3: 0 2px 4px rgba(0,0,0,.44), 0 16px 36px -14px rgba(0,0,0,.70);
+  --k-shadow-press: inset 0 1px 2px rgba(0,0,0,.50);
+  --k-grad-washi: linear-gradient(180deg, #1F1B17 0%, #15110E 100%);
+  --k-grad-hairline: linear-gradient(90deg, transparent, rgba(250,246,242,.30) 18%,
+                                            rgba(250,246,242,.30) 82%, transparent);
+  --k-viz-surface: #1F1B17;
+  --k-viz-grid: rgba(250,246,242,.09);
+  --k-viz-axis: rgba(250,246,242,.24);
+  --k-viz-diverge-mid: var(--k-sumi-800);
+}
+
+/* ─── §5 · TYPOGRAPHIE, ESPACE, GÉOMÉTRIE, MOUVEMENT ──────────────────────── */
+
+:root {
+  /* Familles */
+  --k-font-display: "Shippori Mincho B1", "Zen Old Mincho", "Hiragino Mincho ProN",
+                    "Yu Mincho", Georgia, "Times New Roman", serif;
+  --k-font-sans:    "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic UI",
+                    "Segoe UI", system-ui, -apple-system, sans-serif;
+  --k-font-mono:    "IBM Plex Mono", "SF Mono", "Cascadia Mono", Consolas, monospace;
+  --k-font-body:    var(--k-font-sans);
+
+  /* Échelle typographique — tierce majeure (1.25), arrondie à la demi-unité.
+     Le titrage est en Shippori ; le reste en Zen Kaku. On ne mélange pas
+     display et sans dans une même ligne. */
+  --k-size-display-1: 4.75rem;  --k-lh-display-1: 1.00;  /* 76px — affiche     */
+  --k-size-display-2: 3.50rem;  --k-lh-display-2: 1.04;  /* 56px — ouverture   */
+  --k-size-title-1:   2.50rem;  --k-lh-title-1:   1.10;  /* 40px               */
+  --k-size-title-2:   1.875rem; --k-lh-title-2:   1.18;  /* 30px               */
+  --k-size-title-3:   1.4375rem;--k-lh-title-3:   1.26;  /* 23px               */
+  --k-size-heading:   1.1875rem;--k-lh-heading:   1.36;  /* 19px               */
+  --k-size-body-lg:   1.09375rem;--k-lh-body-lg:  1.62;  /* 17.5px             */
+  --k-size-body:      1rem;     --k-lh-body:      1.62;  /* 16px               */
+  --k-size-body-sm:   0.90625rem;--k-lh-body-sm:  1.55;  /* 14.5px             */
+  --k-size-caption:   0.8125rem;--k-lh-caption:   1.45;  /* 13px               */
+  --k-size-overline:  0.71875rem;--k-lh-overline: 1.30;  /* 11.5px             */
+
+  /* Graisses */
+  --k-weight-light:  300;  --k-weight-regular: 400;
+  --k-weight-medium: 500;  --k-weight-semibold: 600;  --k-weight-bold: 700;
+
+  /* Interlettrage — le display se resserre, la capitale s'ouvre */
+  --k-tracking-display:  -0.022em;
+  --k-tracking-title:    -0.014em;
+  --k-tracking-body:      0em;
+  --k-tracking-caption:   0.006em;
+  --k-tracking-overline:  0.18em;   /* petites capitales d'affiche */
+
+  /* Mesure de ligne — 62 à 74 signes */
+  --k-measure:       68ch;
+  --k-measure-tight: 46ch;
+
+  /* 間 MA — l'échelle d'espace. Base 4px, progression non linéaire :
+     l'affiche japonaise vit de ses grands vides. */
+  --k-space-3xs: 2px;   --k-space-2xs: 4px;   --k-space-xs:  8px;
+  --k-space-sm:  12px;  --k-space-md:  16px;  --k-space-lg:  24px;
+  --k-space-xl:  32px;  --k-space-2xl: 48px;  --k-space-3xl: 72px;
+  --k-space-4xl: 112px; --k-space-5xl: 160px;
+
+  /* Géométrie — l'imprimé n'a pas d'angles ronds. 2px maximum, sauf pilules. */
+  --k-radius-none: 0;    --k-radius-sm: 2px;   --k-radius-md: 3px;
+  --k-radius-lg:   4px;  --k-radius-pill: 999px;
+  --k-border-hairline: 1px;
+  --k-border-rule:     1px;
+  --k-border-heavy:    2px;
+  --k-border-frame:    3px;   /* cadre d'affiche */
+
+  /* Conteneurs */
+  --k-container-sm: 640px;  --k-container-md: 880px;
+  --k-container-lg: 1160px; --k-container-xl: 1440px;
+
+  /* Mouvement — sec et court. Rien ne rebondit. */
+  --k-ease-out:   cubic-bezier(.2, .7, .3, 1);
+  --k-ease-inout: cubic-bezier(.65, 0, .35, 1);
+  --k-dur-instant: 90ms;  --k-dur-fast: 150ms;
+  --k-dur-base:    220ms; --k-dur-slow: 380ms;
+
+  /* Grain de papier — trame SVG, appliquée en surimpression très faible.
+     C'est le détail qui fait « imprimé » plutôt que « écran ». */
+  --k-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+  --k-grain-opacity: .035;   /* clair */
+  --k-z-base: 0; --k-z-raised: 10; --k-z-sticky: 100;
+  --k-z-overlay: 800; --k-z-modal: 900; --k-z-toast: 1000;
+}
+
+:root[data-theme="dark"] { --k-grain-opacity: .05; }
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) { --k-grain-opacity: .05; }
+}
+
+/* ─── §6 · BASE ─────────────────────────────────────────────────────────────
+   Le strict minimum. La charte n'est pas un framework : elle pose le papier,
+   l'encre et le rythme, puis s'arrête.                                      */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--k-bg-page);
+  color: var(--k-ink-primary);
+  font-family: var(--k-font-body);
+  font-size: var(--k-size-body);
+  line-height: var(--k-lh-body);
+  font-weight: var(--k-weight-regular);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Le grain : une seule couche, en pseudo-élément fixe, non interactive. */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background-image: var(--k-grain);
+  opacity: var(--k-grain-opacity);
+  mix-blend-mode: multiply;
+  z-index: var(--k-z-toast);
+}
+:root[data-theme="dark"] body::after { mix-blend-mode: overlay; }
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) body::after { mix-blend-mode: overlay; }
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--k-font-display);
+  font-weight: var(--k-weight-semibold);
+  letter-spacing: var(--k-tracking-title);
+  color: var(--k-ink-primary);
+  margin: 0 0 var(--k-space-md);
+  text-wrap: balance;
+}
+h1 { font-size: var(--k-size-title-1); line-height: var(--k-lh-title-1); }
+h2 { font-size: var(--k-size-title-2); line-height: var(--k-lh-title-2); }
+h3 { font-size: var(--k-size-title-3); line-height: var(--k-lh-title-3); }
+h4 { font-size: var(--k-size-heading); line-height: var(--k-lh-heading);
+     font-family: var(--k-font-sans); font-weight: var(--k-weight-bold);
+     letter-spacing: var(--k-tracking-body); }
+
+p { margin: 0 0 var(--k-space-md); max-width: var(--k-measure); text-wrap: pretty; }
+
+a { color: var(--k-ink-link); text-decoration-thickness: 1px;
+    text-underline-offset: .18em; transition: color var(--k-dur-fast) var(--k-ease-out); }
+a:hover { color: var(--k-ink-link-hover); }
+
+hr { border: 0; height: 1px; background: var(--k-line-hairline);
+     margin: var(--k-space-2xl) 0; }
+
+code, kbd, samp, pre { font-family: var(--k-font-mono); font-size: .9em; }
+
+:focus-visible {
+  outline: var(--k-focus-width) solid var(--k-focus-ring);
+  outline-offset: var(--k-focus-offset);
+  border-radius: var(--k-radius-sm);
+}
+
+/* Chiffres : proportionnels par défaut, tabulaires en colonne. */
+table, .k-tabular, [data-tabular] { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
+
+/* ─── §7 · MOTIFS DE MARQUE ────────────────────────────────────────────────
+   Trois primitives visuelles à réutiliser. Elles suffisent à identifier la
+   charte sans logo.                                                         */
+
+/* 印 HANKO — le sceau. Carré vermillon, angle vif, jamais arrondi. */
+.k-hanko {
+  display: inline-grid; place-items: center;
+  width: 2.5em; height: 2.5em;
+  background: var(--k-brand); color: var(--k-brand-on);
+  font-family: var(--k-font-display); font-weight: var(--k-weight-bold);
+  font-size: 1em; line-height: 1;
+  border-radius: var(--k-radius-none);
+}
+
+/* 罫 KEI — le filet de titre. Un trait court, épais, vermillon, au-dessus
+   d'un sur-titre en capitales espacées. */
+.k-overline {
+  font-family: var(--k-font-sans);
+  font-size: var(--k-size-overline); line-height: var(--k-lh-overline);
+  font-weight: var(--k-weight-bold); letter-spacing: var(--k-tracking-overline);
+  text-transform: uppercase; color: var(--k-ink-muted);
+  display: flex; align-items: center; gap: var(--k-space-xs);
+}
+.k-overline::before {
+  content: ""; width: 22px; height: var(--k-border-heavy);
+  background: var(--k-brand); flex: none;
+}
+
+/* 縦 TATE — bandeau vertical d'encre, en rappel de la composition verticale
+   de l'affiche. À poser en marge d'une section. */
+.k-tate {
+  writing-mode: vertical-rl; text-orientation: mixed;
+  font-family: var(--k-font-display);
+  letter-spacing: .12em; color: var(--k-ink-faint);
+}
+
+/* ─── §8 · DATA-VIZ — RÈGLES NON NÉGOCIABLES ───────────────────────────────
+   Ordre catégoriel FIGÉ : shu → ai → matsuba → fuji → beni → asagi → kin → toki.
+   Cet ordre n'est pas esthétique, c'est le mécanisme de sécurité daltonisme :
+   il a été retenu parmi 280 permutations validées sur 40 320, en maximisant
+   l'écart minimal entre couleurs voisines.
+
+     · pire paire voisine, deutéranopie : ΔE 14.1 (cible ≥ 8)  — clair ET sombre
+     · pire paire voisine, vision normale : ΔE 17.2 (plancher ≥ 15)
+     · contraste sur surface : les 8 ≥ 3:1 dans les deux modes
+
+   PLAFOND DE SÉRIES. En nuage de points, bulles, carte choroplèthe et petits
+   multiples (où deux marques quelconques peuvent se toucher), seuls les
+   3 PREMIERS créneaux sont validés. Au-delà : regrouper en « Autres » ou
+   facetter — jamais ajouter une neuvième couleur.
+
+   1. On attribue les créneaux dans l'ordre, sans jamais boucler ni sauter.
+   2. La couleur suit l'entité, jamais son rang. Un filtre ne repeint pas.
+   3. Séquentiel = une seule teinte (藍 ai), clair → foncé. Jamais d'arc-en-ciel.
+   4. Divergent = 朱 shu ↔ 藍 ai, milieu neutre --k-viz-diverge-mid.
+      Ordinal : ne pas partir plus clair que ai-400 en clair, ni plus foncé
+      que ai-700 en sombre (plancher 2:1 mesuré).
+   5. Le texte porte des tokens d'encre, jamais la couleur de la série.
+   6. Les couleurs de statut ne servent JAMAIS de « série 5 ».
+   7. Jamais deux axes Y.                                                    */
+
+:root {
+  /* Séquentiel — 藍 ai, une seule teinte */
+  --k-seq-1: var(--k-ai-100);  --k-seq-2: var(--k-ai-200);
+  --k-seq-3: var(--k-ai-300);  --k-seq-4: var(--k-ai-400);
+  --k-seq-5: var(--k-ai-500);  --k-seq-6: var(--k-ai-600);
+  --k-seq-7: var(--k-ai-700);
+  /* Divergent — 朱 ↔ 藍 */
+  --k-div-neg-3: var(--k-shu-700); --k-div-neg-2: var(--k-shu-500);
+  --k-div-neg-1: var(--k-shu-300); --k-div-mid:   var(--k-viz-diverge-mid);
+  --k-div-pos-1: var(--k-ai-300);  --k-div-pos-2: var(--k-ai-500);
+  --k-div-pos-3: var(--k-ai-700);
+  /* Trame d'accessibilité — hachures à 45° / 135°, activées en impression,
+     en forced-colors, ou sur demande. Jamais décoratives. */
+  --k-hatch-45:  repeating-linear-gradient(45deg, transparent 0 3px,
+                 rgba(38,34,30,.42) 3px 4.5px);
+  --k-hatch-135: repeating-linear-gradient(135deg, transparent 0 3px,
+                 rgba(38,34,30,.42) 3px 4.5px);
+}
+
+/* ─── §9 · IMPRESSION ─────────────────────────────────────────────────────── */
+@media print {
+  :root { --k-grain-opacity: 0; }
+  body { background: #fff; color: #000; }
+  body::after { display: none; }
+  a { text-decoration: underline; }
+}

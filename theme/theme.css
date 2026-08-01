@@ -1,96 +1,116 @@
 /* ==========================================================================
-   AFFICHE — système visuel
+   AFFICHE — couche de composants du Menu TV, posée sur la CHARTE K · TAISHŌ
    --------------------------------------------------------------------------
-   Feuille autonome. Aucune dépendance au projet qui la consomme : elle ne
-   connaît que des rôles (surface, encre, teinte, échelle) et des composants
-   génériques préfixés .af-.
+   Ce fichier ne définit AUCUNE couleur, AUCUNE police, AUCUNE taille propre.
+   Il traduit les tokens de la charte (--k-*) en rôles d'interface (--af-*),
+   puis dessine les composants. Charger `k-taisho.css` AVANT lui.
 
-   Pour la réutiliser ailleurs : copier ce fichier, ne toucher qu'au bloc
-   :root. Pour la remplacer : réécrire ce fichier en gardant les mêmes noms
-   de classes, le HTML n'a pas à changer.
+       <link rel="stylesheet" href="k-taisho.css">
+       <link rel="stylesheet" href="theme.css">
 
-   Voir IDENTITE.md pour la signification de chaque token et les règles à
-   ne pas casser.
+   Clair et sombre viennent entièrement de la charte : elle re-choisit chaque
+   valeur sur ses rampes pour chaque surface, ce n'est pas une inversion.
+   Cette couche n'a donc rien à faire pour le mode sombre — sauf pour les
+   teintes catégorielles, qui sont identiques dans les deux modes parce
+   qu'elles ont été validées sur les deux surfaces.
+
+   Voir IDENTITE.md pour les règles à ne pas casser.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. TOKENS
+   1. EXTENSION DE LA CHARTE — deux rampes supplémentaires
+   --------------------------------------------------------------------------
+   La charte fournit huit teintes de data-viz. Le Menu TV a dix catégories.
+   Les deux ajouts sont générés dans le même système : OKLCH, clarté 0,64
+   exactement comme les huit autres, chroma dans la fourchette de la famille
+   (0,110–0,185), et placés dans les deux plus grands trous de la roue —
+   111° et 232°, seuls angles où il restait de la place.
+
+   Ce sont les seules primitives que ce fichier se permet de créer. Elles ont
+   vocation à remonter dans k-taisho.css si tu les valides.
    -------------------------------------------------------------------------- */
 
 :root {
-  /* — Surfaces ————————————————————————————————————————————————— */
-  --af-fond:          #08080a;   /* fond de page, presque noir */
-  --af-relief:        #101015;   /* blocs posés sur le fond */
-  --af-relief-haut:   #191920;   /* survol, puces */
-  --af-trait:         #24242e;
-
-  /* — Encres ——————————————————————————————————————————————————— */
-  --af-encre:         #f4f4f7;
-  --af-encre-2:       #9a9aa6;   /* 6.5:1 sur le fond */
-  --af-encre-3:       #61616d;   /* décoratif, jamais porteur de sens */
-
-  /* — Teintes catégorielles ————————————————————————————————————
-     L'ORDRE EST LE MÉCANISME DE SÉPARATION DALTONISME, PAS UN CHOIX
-     ESTHÉTIQUE. Dix teintes : les huit de la palette de référence, plus deux
-     ajoutées, et un ordre trouvé par recherche sous double contrainte —
-     ΔE deutan/protan ≥ 8 sur chaque paire adjacente, et ΔE en vision normale
-     ≥ 15. Le jeu retenu tient 9,4 et 19,3.
-
-     Validé sur les DEUX surfaces sombres (#08080a et #101015) : bande de
-     clarté OKLCH, plancher de chroma, séparation daltonisme, contraste.
-     Ne pas réordonner, ne pas substituer une teinte isolée : la garantie
-     porte sur la suite entière, pas sur les couleurs prises séparément.
-
-     Chaque teinte porte son encre : le texte posé SUR l'aplat doit atteindre
-     4,5:1. Huit veulent du noir, deux du blanc — c'est calculé, pas choisi. */
-  --af-t1:  #d95926;  --af-t1-encre:  #0a0a0c;  /* orange   5.09:1 */
-  --af-t2:  #199e70;  --af-t2-encre:  #0a0a0c;  /* aqua     5.81:1 */
-  --af-t3:  #a901e6;  --af-t3-encre:  #ffffff;  /* violet   5.48:1 */
-  --af-t4:  #c98500;  --af-t4-encre:  #0a0a0c;  /* jaune    6.44:1 */
-  --af-t5:  #d55181;  --af-t5-encre:  #0a0a0c;  /* magenta  5.01:1 */
-  --af-t6:  #8c9510;  --af-t6-encre:  #0a0a0c;  /* olive    6.05:1 */
-  --af-t7:  #9085e9;  --af-t7-encre:  #0a0a0c;  /* lavande  6.33:1 */
-  --af-t8:  #008300;  --af-t8-encre:  #ffffff;  /* vert     4.95:1 */
-  --af-t9:  #3987e5;  --af-t9-encre:  #0a0a0c;  /* bleu     5.44:1 */
-  --af-t10: #e66767;  --af-t10-encre: #0a0a0c;  /* rouge    6.12:1 */
-
-  /* — Typographie ——————————————————————————————————————————————
-     Deux familles, deux rôles. La display ne sert JAMAIS au texte courant :
-     elle est faite pour être lue de loin, pas longtemps. */
-  --af-display: "Anton", "Haettenschweiler", "Arial Narrow", system-ui, sans-serif;
-  --af-texte:   "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-
-  /* Échelle : le style affiche vit du RAPPORT entre les niveaux, pas des
-     valeurs absolues. L'écart géant↔micro est d'un facteur 8. Le réduire
-     tue l'identité plus sûrement que changer les couleurs. */
-  --af-t-geant:   clamp(46px, 7.5vw, 104px);  /* titre de page */
-  --af-t-section: clamp(32px, 5vw,   64px);   /* nom de catégorie */
-  --af-t-duree:   clamp(24px, 3vw,   40px);   /* durée sur la vignette */
-  --af-t-titre:   17px;                       /* titre d'élément */
-  --af-t-corps:   14px;
-  --af-t-label:   12px;                       /* étiquettes capitales */
-  --af-t-micro:   11px;
-
-  --af-interlettre-large: .16em;   /* étiquettes en capitales */
-  --af-interlettre-serre: -.02em;  /* display */
-
-  /* — Géométrie ————————————————————————————————————————————————
-     Zéro arrondi et ombre franche sans flou : c'est ce qui distingue
-     l'affiche du dashboard. Ne pas « adoucir ». */
-  --af-rayon:        0;
-  --af-trait-fin:    1px;
-  --af-trait-epais:  3px;
-  --af-decalage:     6px;          /* décalage de l'ombre portée */
-
-  /* — Rythme ———————————————————————————————————————————————————— */
-  --af-e1: 4px;  --af-e2: 8px;  --af-e3: 12px; --af-e4: 16px;
-  --af-e5: 24px; --af-e6: 32px; --af-e7: 48px; --af-e8: 72px;
-
-  --af-marge-page: clamp(16px, 3.5vw, 48px);
+  --k-uguisu-500: #919300;   /* 鶯 · vert-olive   OKLCH 0.64 0.141 111° */
+  --k-gunjo-500:  #0099CD;   /* 群青 · bleu       OKLCH 0.64 0.131 232° */
 }
 
 /* --------------------------------------------------------------------------
-   2. BASE
+   2. RÔLES D'INTERFACE
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* — Surfaces et encres : tout vient de la charte — */
+  --af-fond:        var(--k-bg-page);
+  --af-relief:      var(--k-bg-surface);
+  --af-relief-haut: var(--k-bg-raised);
+  --af-trait:       var(--k-line-subtle);
+  --af-trait-fort:  var(--k-line-ink);
+  --af-encre:       var(--k-ink-primary);
+  --af-encre-2:     var(--k-ink-secondary);
+  --af-encre-3:     var(--k-ink-faint);
+
+  /* — Teintes catégorielles ————————————————————————————————————
+     L'ORDRE EST LE MÉCANISME DE SÉPARATION DALTONISME, PAS UN CHOIX
+     ESTHÉTIQUE. Les huit de la charte plus les deux extensions, réordonnées
+     par recherche sous double contrainte et validées sur les DEUX surfaces
+     (claire #FEFBF9 et sombre #1F1B17) : bande de clarté, plancher de chroma,
+     ΔE protan/deutan ≥ 8 sur paires adjacentes, ΔE vision normale ≥ 15,
+     contraste ≥ 3:1. Le jeu retenu tient 13,6 et 20,4.
+
+     Ne pas réordonner, ne pas substituer une teinte isolée : la garantie
+     porte sur la suite entière. */
+  --af-t1:  var(--k-beni-500);     /* 紅  carmin       */
+  --af-t2:  var(--k-ai-500);       /* 藍  indigo       */
+  --af-t3:  var(--k-matsuba-500);  /* 松葉 vert        */
+  --af-t4:  var(--k-fuji-500);     /* 藤  glycine      */
+  --af-t5:  var(--k-shu-500);      /* 朱  vermillon    */
+  --af-t6:  var(--k-asagi-500);    /* 浅葱 bleu-vert   */
+  --af-t7:  var(--k-kin-500);      /* 金  or           */
+  --af-t8:  var(--k-gunjo-500);    /* 群青 bleu        */
+  --af-t9:  var(--k-uguisu-500);   /* 鶯  olive        */
+  --af-t10: var(--k-toki-500);     /* 鴇  rose         */
+
+  /* Une seule encre pour les dix aplats. Mesurée : avec sumi-900, quatre
+     teintes tombaient sous 4,5:1 ; sumi-950 passe partout (pire cas 5,0:1).
+     Identique en clair et en sombre, puisque les aplats le sont aussi. */
+  --af-teinte-encre: var(--k-sumi-950);
+
+  /* — Typographie : les familles et l'échelle sont celles de la charte.
+     Seuls les trois niveaux d'affichage sont propres au Menu TV, parce que
+     l'échelle de la charte s'arrête à 4,75rem et qu'une grille de programmes
+     se lit de plus loin qu'une page de texte. */
+  --af-display: var(--k-font-display);
+  --af-texte:   var(--k-font-body);
+
+  --af-t-geant:   clamp(3rem, 7.5vw, 6.5rem);   /* titre de page      */
+  --af-t-section: clamp(2rem, 5vw,   4rem);     /* nom de catégorie   */
+  --af-t-duree:   clamp(1.5rem, 3vw, 2.5rem);   /* durée sur vignette */
+  --af-t-titre:   var(--k-size-heading);
+  --af-t-corps:   var(--k-size-body-sm);
+  --af-t-label:   var(--k-size-caption);
+  --af-t-micro:   var(--k-size-overline);
+
+  --af-interlettre-large: var(--k-tracking-overline);
+  --af-interlettre-serre: var(--k-tracking-display);
+
+  /* — Géométrie : la charte est déjà sans arrondi, on s'aligne — */
+  --af-rayon:       var(--k-radius-none);
+  --af-trait-fin:   var(--k-border-hairline);
+  --af-trait-epais: 3px;
+  --af-decalage:    6px;
+
+  /* — Rythme — */
+  --af-e1: var(--k-space-2xs);  --af-e2: var(--k-space-xs);
+  --af-e3: var(--k-space-sm);   --af-e4: var(--k-space-md);
+  --af-e5: var(--k-space-lg);   --af-e6: var(--k-space-xl);
+  --af-e7: var(--k-space-2xl);  --af-e8: var(--k-space-3xl);
+
+  --af-marge-page: clamp(var(--k-space-md), 3.5vw, var(--k-space-2xl));
+}
+
+/* --------------------------------------------------------------------------
+   3. BASE
    -------------------------------------------------------------------------- */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -101,34 +121,32 @@ body.af {
   color: var(--af-encre);
   font-family: var(--af-texte);
   font-size: var(--af-t-corps);
-  line-height: 1.45;
+  line-height: var(--k-lh-body-sm);
   -webkit-font-smoothing: antialiased;
 }
 
 .af a { color: inherit; text-decoration: none; }
 
-/* Étiquette : le motif typographique récurrent du système. */
 .af-etiquette {
-  font-family: var(--af-texte);
   font-size: var(--af-t-label);
-  font-weight: 700;
+  font-weight: var(--k-weight-bold);
   letter-spacing: var(--af-interlettre-large);
   text-transform: uppercase;
 }
 
 /* --------------------------------------------------------------------------
-   3. EN-TÊTE
+   4. EN-TÊTE
    -------------------------------------------------------------------------- */
 
 .af-entete {
   padding: var(--af-e7) var(--af-marge-page) var(--af-e5);
-  border-bottom: var(--af-trait-epais) solid var(--af-encre);
+  border-bottom: var(--af-trait-epais) solid var(--af-trait-fort);
 }
 
 .af-entete__date {
   color: var(--af-encre-2);
   font-size: var(--af-t-label);
-  font-weight: 700;
+  font-weight: var(--k-weight-bold);
   letter-spacing: var(--af-interlettre-large);
   text-transform: uppercase;
   margin-bottom: var(--af-e3);
@@ -137,91 +155,82 @@ body.af {
 .af-entete__titre {
   font-family: var(--af-display);
   font-size: var(--af-t-geant);
-  font-weight: 400;
-  line-height: .88;
+  font-weight: var(--k-weight-bold);
+  line-height: .92;
   letter-spacing: var(--af-interlettre-serre);
-  text-transform: uppercase;
   margin: 0;
 }
 
 .af-entete__chapo {
   color: var(--af-encre-2);
-  max-width: 58ch;
+  max-width: var(--k-measure-tight);
   margin: var(--af-e4) 0 0;
 }
 
 /* --------------------------------------------------------------------------
-   4. SECTION — le bandeau plein est le geste central du système
+   5. SECTION — le bandeau plein est le geste central
    -------------------------------------------------------------------------- */
 
-.af-section { --af-teinte: var(--af-t1); --af-teinte-encre: var(--af-t1-encre); }
-.af-section--1 { --af-teinte: var(--af-t1); --af-teinte-encre: var(--af-t1-encre); }
-.af-section--2 { --af-teinte: var(--af-t2); --af-teinte-encre: var(--af-t2-encre); }
-.af-section--3 { --af-teinte: var(--af-t3); --af-teinte-encre: var(--af-t3-encre); }
-.af-section--4 { --af-teinte: var(--af-t4); --af-teinte-encre: var(--af-t4-encre); }
-.af-section--5 { --af-teinte: var(--af-t5); --af-teinte-encre: var(--af-t5-encre); }
-.af-section--6 { --af-teinte: var(--af-t6); --af-teinte-encre: var(--af-t6-encre); }
-.af-section--7 { --af-teinte: var(--af-t7); --af-teinte-encre: var(--af-t7-encre); }
-.af-section--8 { --af-teinte: var(--af-t8); --af-teinte-encre: var(--af-t8-encre); }
-.af-section--9 { --af-teinte: var(--af-t9); --af-teinte-encre: var(--af-t9-encre); }
-.af-section--10 { --af-teinte: var(--af-t10); --af-teinte-encre: var(--af-t10-encre); }
+.af-section    { --af-teinte: var(--af-t1); }
+.af-section--1 { --af-teinte: var(--af-t1); }
+.af-section--2 { --af-teinte: var(--af-t2); }
+.af-section--3 { --af-teinte: var(--af-t3); }
+.af-section--4 { --af-teinte: var(--af-t4); }
+.af-section--5 { --af-teinte: var(--af-t5); }
+.af-section--6 { --af-teinte: var(--af-t6); }
+.af-section--7 { --af-teinte: var(--af-t7); }
+.af-section--8 { --af-teinte: var(--af-t8); }
+.af-section--9 { --af-teinte: var(--af-t9); }
+.af-section--10{ --af-teinte: var(--af-t10); }
 
 .af-section__bandeau {
   background: var(--af-teinte);
   color: var(--af-teinte-encre);
   padding: var(--af-e3) var(--af-marge-page) var(--af-e4);
-  display: flex;
-  align-items: flex-end;
-  gap: var(--af-e4);
-  flex-wrap: wrap;
+  display: flex; align-items: flex-end; gap: var(--af-e4); flex-wrap: wrap;
 }
 
-/* Purement ornemental : le rang est déjà porté par l'ordre et par le nom.
-   C'est la seule chose du système qui a le droit d'être peu contrastée. */
+/* Ornemental : le rang est déjà porté par l'ordre et par le nom. */
 .af-section__numero {
   font-family: var(--af-display);
   font-size: var(--af-t-section);
-  line-height: .8;
-  opacity: .5;
-  font-weight: 400;
+  line-height: .8; opacity: .5;
+  font-weight: var(--k-weight-regular);
 }
 
+/* `color: inherit` est indispensable : la charte donne une couleur d'encre à
+   tous les h1-h4, et cette règle l'emporterait sur celle du bandeau — le nom
+   de catégorie ressortirait en crème sur l'aplat en mode sombre. */
 .af-section__nom {
+  color: inherit;
   font-family: var(--af-display);
   font-size: var(--af-t-section);
-  font-weight: 400;
-  line-height: .82;
+  font-weight: var(--k-weight-bold);
+  line-height: .9;
   letter-spacing: var(--af-interlettre-serre);
-  text-transform: uppercase;
-  margin: 0;
-  flex: 0 1 auto;
+  margin: 0; flex: 0 1 auto;
 }
 
-/* Pas d'opacité ici : à 12px le seuil est de 4,5:1, et 0.8 d'opacité fait
-   tomber la teinte verte à 3,71:1. L'atténuation se fait par la graisse et
-   la taille, jamais par la transparence.
-   Le min-width force le passage à la ligne plutôt que l'écrasement quand le
-   nom de catégorie est long. */
+/* Pas d'opacité : à cette taille le seuil est de 4,5:1, et la transparence
+   sur un aplat coloré fait chuter le contraste. L'atténuation passe par la
+   graisse, jamais par l'alpha. */
 .af-section__sous {
   font-size: var(--af-t-label);
-  font-weight: 600;
-  letter-spacing: .04em;
+  font-weight: var(--k-weight-semibold);
+  letter-spacing: var(--k-tracking-caption);
   padding-bottom: 5px;
-  margin-left: auto;
-  text-align: right;
-  min-width: 22ch;
-  max-width: 40ch;
+  margin-left: auto; text-align: right;
+  min-width: 22ch; max-width: 40ch;
 }
 
 .af-section__corps { padding: var(--af-e5) var(--af-marge-page) var(--af-e7); }
 
 /* --------------------------------------------------------------------------
-   5. GRILLE ET FICHES
+   6. GRILLE ET FICHES
    -------------------------------------------------------------------------- */
 
 .af-grille {
-  display: grid;
-  gap: var(--af-e4);
+  display: grid; gap: var(--af-e4);
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
@@ -230,52 +239,68 @@ body.af {
   border: var(--af-trait-fin) solid var(--af-trait);
   border-top: var(--af-trait-epais) solid var(--af-teinte);
   border-radius: var(--af-rayon);
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
-
-.af-fiche:hover,
-.af-fiche:focus-visible {
+.af-fiche:hover, .af-fiche:focus-within {
   background: var(--af-relief-haut);
   transform: translate(calc(var(--af-decalage) * -.5), calc(var(--af-decalage) * -.5));
   box-shadow: var(--af-decalage) var(--af-decalage) 0 var(--af-teinte);
-  outline: none;
+}
+.af-fiche__lien { display: flex; flex-direction: column; flex: 1; }
+.af-fiche__lien:focus-visible {
+  outline: var(--k-focus-width) solid var(--k-focus-ring);
+  outline-offset: calc(var(--k-focus-offset) * -1);
 }
 
-.af-fiche__image { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.af-fiche__image { position: relative; aspect-ratio: 16 / 9; background: var(--k-sumi-950); }
 .af-fiche__image img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* Étiquette de créneau : aplat de teinte, encre calculée. */
 .af-fiche__creneau {
   position: absolute; top: 0; left: 0;
-  background: var(--af-teinte);
-  color: var(--af-teinte-encre);
+  background: var(--af-teinte); color: var(--af-teinte-encre);
   font-size: var(--af-t-label);
-  font-weight: 700;
+  font-weight: var(--k-weight-bold);
   letter-spacing: var(--af-interlettre-large);
   text-transform: uppercase;
   padding: 5px var(--af-e3) 4px;
 }
 
 /* La durée est une information de premier plan : c'est par elle qu'on choisit.
-   Elle est traitée comme un chiffre d'affiche, pas comme une métadonnée. */
+   Traitée comme un chiffre d'affiche, sur un cartouche d'encre pour tenir le
+   contraste quelle que soit la miniature. */
 .af-fiche__duree {
-  position: absolute; right: var(--af-e3); bottom: 2px;
+  position: absolute; right: 0; bottom: 0;
   font-family: var(--af-display);
   font-size: var(--af-t-duree);
+  font-weight: var(--k-weight-bold);
   line-height: 1;
-  color: var(--af-encre);
-  text-transform: uppercase;
-  text-shadow: 0 2px 14px rgba(0,0,0,.95), 0 0 4px rgba(0,0,0,.9);
+  color: var(--k-sumi-25);
+  background: rgba(21, 17, 14, .82);
+  padding: 2px var(--af-e2) 4px;
 }
 .af-fiche__duree small { font-size: .45em; letter-spacing: .06em; margin-left: 2px; }
 
-.af-fiche__lien { display: flex; flex-direction: column; flex: 1; }
-
 .af-fiche__corps {
-  padding: var(--af-e3) var(--af-e3) var(--af-e3);
-  display: flex; flex-direction: column; gap: var(--af-e2); flex: 1;
+  padding: var(--af-e3); display: flex; flex-direction: column;
+  gap: var(--af-e2); flex: 1;
+}
+
+/* Casse d'origine obligatoire : les métadonnées YouTube doivent être
+   affichées non modifiées. Pas de text-transform ici, jamais. */
+.af-fiche__titre {
+  font-family: var(--af-display);
+  font-size: var(--af-t-titre);
+  font-weight: var(--k-weight-semibold);
+  line-height: var(--k-lh-heading);
+  letter-spacing: var(--k-tracking-title);
+  margin: 0;
+}
+
+.af-fiche__source {
+  color: var(--af-encre-2);
+  font-size: var(--af-t-label);
+  font-weight: var(--k-weight-medium);
 }
 
 .af-fiche__pied {
@@ -283,37 +308,23 @@ body.af {
   display: flex; align-items: flex-end; gap: var(--af-e2);
   justify-content: space-between;
 }
-.af-fiche__pied .af-fiche__signaux { flex: 1; }
-
-/* Titre d'élément : casse d'origine obligatoire. Les métadonnées YouTube
-   doivent rester non modifiées — pas de text-transform ici. */
-.af-fiche__titre {
-  font-size: var(--af-t-titre);
-  font-weight: 700;
-  line-height: 1.24;
-  letter-spacing: -.005em;
-  margin: 0;
-}
-
-.af-fiche__source { color: var(--af-encre-2); font-size: 12.5px; font-weight: 500; }
-
 .af-fiche__signaux {
-  margin-top: auto; padding-top: var(--af-e3);
+  flex: 1; display: flex; flex-wrap: wrap; gap: var(--af-e1);
+  padding-top: var(--af-e3);
   border-top: var(--af-trait-fin) solid var(--af-trait);
-  display: flex; flex-wrap: wrap; gap: var(--af-e1);
 }
 
-/* Petit texte : jamais de teinte — à 11px le seuil est 4,5:1 et la plupart
-   des teintes échouent sur le fond. L'emphase passe par la graisse. */
+/* Petit texte : jamais de teinte. L'emphase passe par la graisse. */
 .af-puce {
   font-size: var(--af-t-micro);
   color: var(--af-encre-2);
-  background: var(--af-relief-haut);
+  background: var(--k-bg-hover);
   padding: 3px var(--af-e2);
-  font-weight: 500;
+  font-weight: var(--k-weight-medium);
 }
-.af-puce--fort { color: var(--af-encre); font-weight: 700; background: #262630; }
-.af-puce--faible { color: var(--af-encre-3); font-style: italic; }
+.af-puce--fort  { color: var(--af-encre); font-weight: var(--k-weight-bold);
+                  background: var(--k-bg-active); }
+.af-puce--faible{ color: var(--af-encre-3); font-style: italic; }
 
 .af-vide {
   border: var(--af-trait-fin) dashed var(--af-trait);
@@ -324,13 +335,12 @@ body.af {
   color: var(--af-encre-3);
 }
 .af-vide__creneau {
-  font-size: var(--af-t-label); font-weight: 700;
+  font-size: var(--af-t-label); font-weight: var(--k-weight-bold);
   letter-spacing: var(--af-interlettre-large); text-transform: uppercase;
-  color: var(--af-encre-3);
 }
 
 /* --------------------------------------------------------------------------
-   6. COMMANDES ET PANNEAU DE RÉGLAGES
+   7. COMMANDES, BASCULE CLAIR/SOMBRE, PANNEAU
    -------------------------------------------------------------------------- */
 
 .af-barre {
@@ -341,35 +351,41 @@ body.af {
 .af-bouton {
   font-family: var(--af-texte);
   font-size: var(--af-t-label);
-  font-weight: 700;
+  font-weight: var(--k-weight-bold);
   letter-spacing: var(--af-interlettre-large);
   text-transform: uppercase;
   color: var(--af-encre);
   background: transparent;
-  border: 2px solid var(--af-encre);
+  border: var(--k-border-heavy) solid var(--af-trait-fort);
   border-radius: var(--af-rayon);
   padding: 6px var(--af-e3);
-  cursor: pointer;
-  white-space: nowrap;
+  cursor: pointer; white-space: nowrap;
   transition: background .12s, color .12s;
 }
-.af-bouton:hover, .af-bouton:focus-visible {
-  background: var(--af-encre); color: var(--af-fond); outline: none;
+.af-bouton:hover { background: var(--af-trait-fort); color: var(--k-bg-page); }
+.af-bouton:focus-visible {
+  outline: var(--k-focus-width) solid var(--k-focus-ring);
+  outline-offset: var(--k-focus-offset);
 }
 .af-bouton--discret {
   border-color: var(--af-trait); color: var(--af-encre-2);
-  font-weight: 600; letter-spacing: .06em;
+  font-weight: var(--k-weight-semibold); letter-spacing: var(--k-tracking-caption);
 }
-.af-bouton--discret:hover { background: var(--af-relief-haut); color: var(--af-encre); }
+.af-bouton--discret:hover { background: var(--k-bg-hover); color: var(--af-encre); }
 
-/* Dans une fiche, le bouton est secondaire : il ne doit pas concurrencer
-   la durée ni le titre. */
+/* La bascule affiche l'état courant : auto suit le système, sinon forcé. */
+.af-bascule { display: inline-flex; align-items: center; gap: var(--af-e2); }
+.af-bascule svg { width: 15px; height: 15px; fill: none;
+                  stroke: currentColor; stroke-width: 1.7;
+                  stroke-linecap: round; stroke-linejoin: round; }
+
 .af-fiche .af-bouton {
-  border-width: 1px; border-color: var(--af-trait);
+  border-width: var(--k-border-hairline); border-color: var(--af-trait);
   color: var(--af-encre-2); padding: 4px var(--af-e2);
-  letter-spacing: .08em; font-size: var(--af-t-micro);
+  letter-spacing: var(--k-tracking-caption); font-size: var(--af-t-micro);
 }
-.af-fiche .af-bouton:hover { border-color: var(--af-encre); color: var(--af-fond); }
+.af-fiche .af-bouton:hover { border-color: var(--af-trait-fort);
+                             background: var(--af-trait-fort); color: var(--k-bg-page); }
 
 .af-annonce { font-size: var(--af-t-micro); color: var(--af-encre-2); }
 
@@ -386,54 +402,57 @@ body.af {
   align-items: start;
 }
 .af-panneau h3 {
-  font-family: var(--af-display); font-weight: 400;
-  font-size: 26px; text-transform: uppercase; letter-spacing: var(--af-interlettre-serre);
+  font-family: var(--af-display);
+  font-weight: var(--k-weight-semibold);
+  font-size: var(--k-size-title-3);
+  letter-spacing: var(--af-interlettre-serre);
   margin: 0 0 var(--af-e2);
 }
 .af-panneau h4 {
-  font-size: var(--af-t-label); font-weight: 700; text-transform: uppercase;
-  letter-spacing: var(--af-interlettre-large); color: var(--af-encre-2);
-  margin: var(--af-e4) 0 var(--af-e2);
+  font-size: var(--af-t-label); font-weight: var(--k-weight-bold);
+  text-transform: uppercase; letter-spacing: var(--af-interlettre-large);
+  color: var(--af-encre-2); margin: var(--af-e4) 0 var(--af-e2);
 }
-.af-note { color: var(--af-encre-2); font-size: 12.5px; margin: 0 0 var(--af-e3); }
-.af-note code { background: var(--af-relief-haut); padding: 1px 4px; }
+.af-note { color: var(--af-encre-2); font-size: var(--af-t-label);
+           margin: 0 0 var(--af-e3); }
+.af-note code { background: var(--k-bg-hover); padding: 1px 4px; }
 
 .af-choix { display: flex; align-items: center; gap: var(--af-e2); padding: 3px 0;
-            font-size: 13px; cursor: pointer; }
-.af-choix input { width: 15px; height: 15px; accent-color: var(--af-encre); flex: none; }
-.af-choix em { color: var(--af-encre-3); font-style: normal; font-size: 11px;
-               text-transform: uppercase; letter-spacing: .08em; }
+            font-size: var(--af-t-corps); cursor: pointer; }
+.af-choix input { width: 15px; height: 15px; accent-color: var(--k-brand); flex: none; }
+.af-choix em { color: var(--af-encre-3); font-style: normal;
+               font-size: var(--af-t-micro); text-transform: uppercase;
+               letter-spacing: var(--k-tracking-caption); }
 .af-choix-ligne { display: flex; gap: var(--af-e5); flex-wrap: wrap; }
 
-.af-formulaire { display: flex; gap: var(--af-e2); flex-wrap: wrap; margin-bottom: var(--af-e3); }
+.af-formulaire { display: flex; gap: var(--af-e2); flex-wrap: wrap;
+                 margin-bottom: var(--af-e3); }
 .af-formulaire input, .af-formulaire select {
-  font-family: var(--af-texte); font-size: 13px;
+  font-family: var(--af-texte); font-size: var(--af-t-corps);
   background: var(--af-fond); color: var(--af-encre);
   border: var(--af-trait-fin) solid var(--af-trait);
   border-radius: var(--af-rayon); padding: 6px var(--af-e2);
 }
 .af-formulaire input { flex: 1 1 150px; min-width: 0; }
 .af-formulaire input:focus-visible, .af-formulaire select:focus-visible {
-  outline: 2px solid var(--af-encre); outline-offset: -2px;
+  outline: var(--k-focus-width) solid var(--k-focus-ring); outline-offset: -2px;
 }
 
 .af-code {
   background: var(--af-fond); border: var(--af-trait-fin) solid var(--af-trait);
-  padding: var(--af-e3); font-size: 12px; overflow-x: auto;
+  padding: var(--af-e3); font-size: var(--af-t-micro); overflow-x: auto;
   color: var(--af-encre-2); margin: 0 0 var(--af-e3);
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--k-font-mono);
 }
 
 .af-groupe { margin-bottom: var(--af-e4); break-inside: avoid; }
-
-/* Une longue liste de cases à cocher est illisible en colonne unique : on la
-   laisse couler sur plusieurs colonnes, sans jamais couper un groupe. */
 .af-panneau__large { grid-column: 1 / -1; }
-.af-colonnes { columns: 240px 4; column-gap: var(--af-e6); }
+.af-colonnes   { columns: 240px 4; column-gap: var(--af-e6); }
+.af-colonnes-2 { columns: 200px 2; column-gap: var(--af-e5); }
 .af-colonnes h4:first-child { margin-top: 0; }
 
 /* --------------------------------------------------------------------------
-   7. PIED
+   8. PIED
    -------------------------------------------------------------------------- */
 
 .af-pied {
@@ -441,23 +460,18 @@ body.af {
   border-top: var(--af-trait-fin) solid var(--af-trait);
   color: var(--af-encre-3);
   font-size: var(--af-t-micro);
-  max-width: 90ch;
+  max-width: var(--k-measure);
 }
 
 /* --------------------------------------------------------------------------
-   8. PRÉFÉRENCES UTILISATEUR
+   9. PRÉFÉRENCES UTILISATEUR
    -------------------------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .af-section__corps { padding-left: var(--af-marge-page); padding-right: var(--af-marge-page); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .af-fiche { transition: none; }
-  .af-fiche:hover, .af-fiche:focus-visible { transform: none; }
+  .af-fiche:hover, .af-fiche:focus-within { transform: none; }
 }
-
-@media print {
-  body.af { background: #fff; color: #000; }
-  .af-fiche { border-color: #000; }
-}
-
-/* Deux colonnes pour la liste des catégories : dix lignes en colonne unique
-   allongent inutilement le panneau. */
-.af-colonnes-2 { columns: 200px 2; column-gap: var(--af-e5); }
