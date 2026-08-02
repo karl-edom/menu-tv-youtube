@@ -20,7 +20,19 @@
     souhaits: "menu-tv:souhaits",
     theme: "menu-tv:theme",
     temps: "menu-tv:temps",
+    montrees: "menu-tv:montrees",
   };
+
+  /* Une vidéo affichée et non ouverte, c'est un refus. La remontrer demain,
+     c'est reproduire exactement ce qu'on reproche aux plateformes.
+
+     Mais l'EXCLURE serait pire : à ~26 vidéos affichées par jour pour un
+     vivier de quelques centaines, on viderait la grille en deux semaines.
+     On la RÉTROGRADE donc : pendant cette durée elle n'est retenue que s'il
+     n'existe aucun candidat jamais montré pour cette case. Avec un vivier
+     riche on ne la revoit jamais ; avec un vivier maigre on la revoit plutôt
+     que de voir un trou. Le système s'autorégule. */
+  const QUARANTAINE_MONTREE_JOURS = 21;
 
   /* Le temps disponible n'est PAS un réglage : il change à chaque fois qu'on
      ouvre la page. Il est donc mémorisé avec la date du jour et remis à zéro
@@ -143,7 +155,7 @@
   /* Mêmes règles que la sélection serveur : une case = une vidéo, une chaîne
      n'apparaît qu'une fois dans la grille, et les cases les plus pauvres sont
      servies en premier pour ne pas se faire rafler leur seul candidat. */
-  function construireGrille(donnees, reg, histo, reportsDus, differes, budget) {
+  function construireGrille(donnees, reg, histo, reportsDus, differes, budget, montrees) {
     const grille = new Map();
     const chainesPrises = new Set();
 
@@ -196,7 +208,11 @@
       if (grille.has(cellule)) continue;
       const pool = eligibles(cellule);
       if (!pool.length) continue;
-      const gagnant = pool[0]; // le vivier arrive déjà trié par score
+      // Deux étages : on sert d'abord ce qui n'a jamais été affiché. Le
+      // déjà-montré n'est qu'un filet de sécurité contre la case vide.
+      const inedits = pool.filter((v) => !montrees[v.id]);
+      const gagnant = (inedits.length ? inedits : pool)[0];
+      if (!inedits.length) gagnant.revu = true;
       grille.set(cellule, gagnant);
       chainesPrises.add(gagnant.chaine_id);
     }
@@ -222,6 +238,7 @@
     ];
     if (v.rattrapage) puces.push('<span class="af-puce af-puce--faible">rattrapage</span>');
     if (v.reporte) puces.push('<span class="af-puce af-puce--fort">reportée</span>');
+    if (v.revu) puces.push('<span class="af-puce af-puce--faible">déjà proposée</span>');
 
     // Titre et miniature affichés tels quels : les métadonnées YouTube ne
     // doivent pas être modifiées.
@@ -258,7 +275,8 @@
     );
     const minutes = tempsDispo();
     const budget = minutes === null ? null : minutes * 60;
-    const grille = construireGrille(donnees, reg, histo, dus, differes, budget);
+    const montrees = lire(CLES.montrees, {});
+    const grille = construireGrille(donnees, reg, histo, dus, differes, budget, montrees);
 
     const actives = reg.intentions;
     const sections = donnees.intentions.map((intention, i) => {
@@ -290,6 +308,7 @@
 </section>`;
     });
 
+    memoriserAffichage(grille);
     document.querySelector("[data-zone=grille]").innerHTML = sections.join("");
     const compte = document.querySelector("[data-zone=compte]");
     if (compte) {
@@ -375,6 +394,17 @@
     ecrire(CLES.reports, reports);
     rendre(donnees);
     annoncer("Reportée à demain.");
+  }
+
+  function memoriserAffichage(grille) {
+    const m = lire(CLES.montrees, {});
+    const jour = aujourdhui();
+    const limite = new Date();
+    limite.setDate(limite.getDate() - QUARANTAINE_MONTREE_JOURS);
+    const iso = limite.toISOString().slice(0, 10);
+    for (const [id, d] of Object.entries(m)) if (d < iso) delete m[id];
+    for (const v of grille.values()) if (!m[v.id]) m[v.id] = jour;
+    ecrire(CLES.montrees, m);
   }
 
   function marquerVue(id) {
@@ -548,6 +578,7 @@
       if (role === "oublier") {
         ecrire(CLES.historique, {});
         ecrire(CLES.reports, {});
+        ecrire(CLES.montrees, {});
         rendre(donnees);
         annoncer("Historique effacé.");
       }

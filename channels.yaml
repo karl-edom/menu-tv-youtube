@@ -37,6 +37,8 @@ chaines:
   # Les rédactions publient plusieurs fois par jour — deux vidéos maximum par
   # chaîne dans le vivier, sinon elles écrasent tout.
   - {handle: "@LeMondefr",              intention: actualites, langue: fr}
+  - {handle: "@BFMBusiness",            intention: actualites, langue: fr}
+  - {handle: "@LeMondefr",              intention: actualites, langue: fr}
   - {handle: "@bloomberg",              intention: actualites, langue: en}
 
   # ------------------------------------------------------------- COMPRENDRE
@@ -52,6 +54,7 @@ chaines:
   - {handle: "@Underscore_",            intention: comprendre, langue: fr}
   - {handle: "@Scilabus",               intention: comprendre, langue: fr}
   - {handle: "@ExperimentBoy",          intention: comprendre, langue: fr}
+  - {handle: "@DrNozman",               intention: comprendre, langue: fr}
   - {handle: "@veritasium",             intention: comprendre, langue: en}
   - {handle: "@kurzgesagt",             intention: comprendre, langue: en}
   - {handle: "@3blue1brown",            intention: comprendre, langue: en}
