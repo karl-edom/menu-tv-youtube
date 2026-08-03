@@ -53,6 +53,10 @@
   "id": "UC5X4e8ScZI2AFd_vkjSoyoQ",
   "nom": "AstronoGeek"
  },
+ "@BFMBusiness": {
+  "id": "UCUsBMOIUl_ad6JUOC16DpmQ",
+  "nom": "BFM Business"
+ },
  "@BaladeMentale": {
   "id": "UCS_7tplUgzJG4DhA16re5Yg",
   "nom": "Balade Mentale"
@@ -144,6 +148,10 @@
  "@DirtyBiology": {
   "id": "UCtqICqGbPSbTN09K1_7VZ3Q",
   "nom": "DirtyBiology"
+ },
+ "@DrNozman": {
+  "id": "UCWnfDPdZw6A23UtuBpYBbAg",
+  "nom": "Dr Nozman"
  },
  "@DrewGooden": {
   "id": "UCjtkaY_1JrDw6uUtwvcPsTg",
@@ -375,6 +383,10 @@
   "id": "UCP5tjEmvPItGyLhmjdwP7Ww",
   "nom": "RealLifeLore"
  },
+ "@ScienceClic": {
+  "id": "UCV6uM3y-8TeO7JlCtcEN-Bg",
+  "nom": "ScienceClic"
+ },
  "@ScienceEtonnante": {
   "id": "UCaNlbnghtwlsGF-KzAFThqA",
   "nom": "ScienceEtonnante"
@@ -410,6 +422,10 @@
   "nom": "Steve Mould",
   "resolu_par_recherche": true,
   "ressemblance": 1.0
+ },
+ "@SteveMould": {
+  "id": "UCEIwxahdLz7bap-VDs9h35A",
+  "nom": "Steve Mould"
  },
  "@StuffMadeHere": {
   "id": "UCj1VqrHhDte54oLgPG4xpuQ",
@@ -536,6 +552,10 @@
  "@lexfridman": {
   "id": "UCSHZKyawb77ixDdsGog4iWA",
   "nom": "Lex Fridman"
+ },
+ "@mattstefani": {
+  "id": "UCQ1ffXBtmuSbSxmaM363-eA",
+  "nom": "Matthieu Stefani - Génération Do It Yourself"
  },
  "@numberphile": {
   "id": "UCoxcjq-8xIDTYp3uz647V5A",
