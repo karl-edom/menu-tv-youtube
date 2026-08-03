@@ -55,6 +55,7 @@ chaines:
   - {handle: "@Scilabus",               intention: comprendre, langue: fr}
   - {handle: "@ExperimentBoy",          intention: comprendre, langue: fr}
   - {handle: "@DrNozman",               intention: comprendre, langue: fr}
+  - {handle: "@ScienceClic",               intention: comprendre, langue: fr}
   - {handle: "@veritasium",             intention: comprendre, langue: en}
   - {handle: "@kurzgesagt",             intention: comprendre, langue: en}
   - {handle: "@3blue1brown",            intention: comprendre, langue: en}
@@ -94,7 +95,6 @@ chaines:
   - {handle: "@Bolchegeek",             intention: oeuvres, langue: fr}
   - {handle: "@LinksTheSun",            intention: oeuvres, langue: fr}
   - {handle: "@CalmosOfficiel",         intention: oeuvres, langue: fr}
-  - {handle: "@LeVortexOfficiel",       intention: oeuvres, langue: fr}
   - {handle: "@Nerdwriter1",            intention: oeuvres, langue: en}
   - {handle: "@ThomasFlight",           intention: oeuvres, langue: en}
   - {handle: "@LikeStoriesofOld",       intention: oeuvres, langue: en}
@@ -112,7 +112,6 @@ chaines:
   - {handle: "@ConfessionsdHistoire",   intention: recit, langue: fr}
   - {handle: "@LaTronche",              intention: recit, langue: fr}
   - {handle: "@Feldup",                 intention: recit, langue: fr}
-  - {handle: "@AbrahamOnTime",          intention: recit, langue: fr}
   - {handle: "@HistoriaCivilis",        intention: recit, langue: en}
   - {handle: "@FallofCivilizations",    intention: recit, langue: en}
   - {handle: "@LEMMiNO",                intention: recit, langue: en}
@@ -151,7 +150,7 @@ chaines:
   # ---------------------------------------------------------------- ECOUTER
   # Entretiens et podcasts filmés. Alimente Soirée et Long cours.
   - {handle: "@thinkerview",            intention: ecouter, langue: fr}
-  - {handle: "@GDIYPodcast",            intention: ecouter, langue: fr}
+  - {handle: "@mattstefani",            intention: ecouter, langue: fr}
   - {handle: "@LEGEND",                 intention: ecouter, langue: fr}
   - {handle: "@Konbini",                intention: ecouter, langue: fr}
   - {handle: "@lexfridman",             intention: ecouter, langue: en}
