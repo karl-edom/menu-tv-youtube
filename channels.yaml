@@ -68,7 +68,7 @@ chaines:
   - {handle: "@PracticalEngineeringChannel", intention: comprendre, langue: en}
   - {handle: "@TechnologyConnections",  intention: comprendre, langue: en}
   - {handle: "@NativLang",              intention: comprendre, langue: en}
-  - {handle: "@Steve Mould",            intention: comprendre, langue: en}
+  - {handle: "@SteveMould",            intention: comprendre, langue: en}
 
   # ------------------------------------------------------------------ MONDE
   # Économie, géopolitique, société, enquête. Daté et situé.
