@@ -38,8 +38,11 @@ chaines:
   # chaîne dans le vivier, sinon elles écrasent tout.
   - {handle: "@LeMondefr",              intention: actualites, langue: fr}
   - {handle: "@BFMBusiness",            intention: actualites, langue: fr}
-  - {handle: "@LeMondefr",              intention: actualites, langue: fr}
+  - {handle: "@LesEchosTV",             intention: actualites, langue: fr}
+  - {handle: "@lerevenumedia",          intention: actualites, langue: fr}
+  - {handle: "@Assemblee-nationale",    intention: actualites, langue: fr}
   - {handle: "@bloomberg",              intention: actualites, langue: en}
+  -
 
   # ------------------------------------------------------------- COMPRENDRE
   # Mécanismes, sciences, mathématiques, technique. Intemporel.
@@ -55,7 +58,8 @@ chaines:
   - {handle: "@Scilabus",               intention: comprendre, langue: fr}
   - {handle: "@ExperimentBoy",          intention: comprendre, langue: fr}
   - {handle: "@DrNozman",               intention: comprendre, langue: fr}
-  - {handle: "@ScienceClic",               intention: comprendre, langue: fr}
+  - {handle: "@ScienceClic",            intention: comprendre, langue: fr}
+  - {handle: "@Heureka",                intention: comprendre, langue: fr}
   - {handle: "@veritasium",             intention: comprendre, langue: en}
   - {handle: "@kurzgesagt",             intention: comprendre, langue: en}
   - {handle: "@3blue1brown",            intention: comprendre, langue: en}
@@ -80,6 +84,7 @@ chaines:
   - {handle: "@blastinfo",              intention: monde, langue: fr}
   - {handle: "@Micode",                 intention: monde, langue: fr}
   - {handle: "@ARTEfr",                 intention: monde, langue: fr}
+  - {handle: "@LeDessousdesCartesARTE", intention: monde, langue: fr}
   - {handle: "@Johnnyharris",           intention: monde, langue: en}
   - {handle: "@Wendoverproductions",    intention: monde, langue: en}
   - {handle: "@RealLifeLore",           intention: monde, langue: en}
@@ -95,6 +100,9 @@ chaines:
   - {handle: "@Bolchegeek",             intention: oeuvres, langue: fr}
   - {handle: "@LinksTheSun",            intention: oeuvres, langue: fr}
   - {handle: "@CalmosOfficiel",         intention: oeuvres, langue: fr}
+  - {handle: "@blowuparte",             intention: oeuvres, langue: fr}
+  - {handle: "@Alt236",                 intention: oeuvres, langue: fr}
+  - {handle: "@NexusVI",                intention: oeuvres, langue: fr}
   - {handle: "@Nerdwriter1",            intention: oeuvres, langue: en}
   - {handle: "@ThomasFlight",           intention: oeuvres, langue: en}
   - {handle: "@LikeStoriesofOld",       intention: oeuvres, langue: en}
@@ -112,6 +120,9 @@ chaines:
   - {handle: "@ConfessionsdHistoire",   intention: recit, langue: fr}
   - {handle: "@LaTronche",              intention: recit, langue: fr}
   - {handle: "@Feldup",                 intention: recit, langue: fr}
+  - {handle: "@Sylvqin",                intention: recit, langue: fr}
+  - {handle: "@LesRevuesduMonde",       intention: recit, langue: fr}
+  - {handle: "@lhistoirenousledira",    intention: recit, langue: fr}
   - {handle: "@HistoriaCivilis",        intention: recit, langue: en}
   - {handle: "@FallofCivilizations",    intention: recit, langue: en}
   - {handle: "@LEMMiNO",                intention: recit, langue: en}
@@ -126,6 +137,11 @@ chaines:
   - {handle: "@ChefMichelDumas",        intention: faire, langue: fr}
   - {handle: "@LAtelierdeRoxane",       intention: faire, langue: fr}
   - {handle: "@BricoleurPro",           intention: faire, langue: fr}
+  - {handle: "@DeusExSilicium",         intention: faire, langue: fr}
+  - {handle: "@verdeterreproduction",   intention: faire, langue: fr}
+  - {handle: "@DamienDekarz",           intention: faire, langue: fr}
+  - {handle: "@MonsieurBidouille",      intention: faire, langue: fr}
+  - {handle: "@ChefMichelDumas",        intention: faire, langue: fr}
   - {handle: "@Fireship",               intention: faire, langue: en}
   - {handle: "@tested",                 intention: faire, langue: en}
   - {handle: "@ThisOldTony",            intention: faire, langue: en}
@@ -138,6 +154,9 @@ chaines:
   # La valeur est dans l'image. Nature, espace, geste spectaculaire.
   - {handle: "@Boreales",               intention: regarder, langue: fr}
   - {handle: "@ushuaiatv",              intention: regarder, langue: fr}
+  - {handle: "@KilianBron",             intention: regarder, langue: fr}
+  - {handle: "@SebMontazRosset",        intention: regarder, langue: fr}
+  - {handle: "@BrunoMaltor",            intention: regarder, langue: fr}
   - {handle: "@bbcearth",               intention: regarder, langue: en}
   - {handle: "@NatGeo",                 intention: regarder, langue: en}
   - {handle: "@theslowmoguys",          intention: regarder, langue: en}
@@ -153,6 +172,10 @@ chaines:
   - {handle: "@mattstefani",            intention: ecouter, langue: fr}
   - {handle: "@LEGEND",                 intention: ecouter, langue: fr}
   - {handle: "@Konbini",                intention: ecouter, langue: fr}
+  - {handle: "@LePrecepteur",           intention: ecouter, langue: fr}
+  - {handle: "@MonsieurPhi",            intention: ecouter, langue: fr}
+  - {handle: "@jokariz6803",            intention: ecouter, langue: fr}
+  - {handle: "@",                intention: ecouter, langue: fr}
   - {handle: "@lexfridman",             intention: ecouter, langue: en}
   - {handle: "@hubermanlab",            intention: ecouter, langue: en}
   - {handle: "@TheDiaryOfACEO",         intention: ecouter, langue: en}
@@ -163,6 +186,7 @@ chaines:
   - {handle: "@ZeratoR",                intention: jouer, langue: fr}
   - {handle: "@AlphaCast",              intention: jouer, langue: fr}
   - {handle: "@BazarDuGrenier",         intention: jouer, langue: fr}
+  - {handle: "@at0mium",                intention: jouer, langue: fr}
   - {handle: "@videogamedunkey",        intention: jouer, langue: en}
   - {handle: "@NakeyJakey",             intention: jouer, langue: en}
   - {handle: "@GameMakersToolkit",      intention: jouer, langue: en}
@@ -180,8 +204,11 @@ chaines:
   - {handle: "@Cyprien",                intention: rire, langue: fr}
   - {handle: "@Squeezie",               intention: rire, langue: fr}
   - {handle: "@McFlyetCarlito",         intention: rire, langue: fr}
-  - {handle: "@palmashow",              intention: rire, langue: fr}
+  - {handle: "@Palmashow",              intention: rire, langue: fr}
   - {handle: "@GoldenMoustache",        intention: rire, langue: fr}
+  - {handle: "@Verino",                 intention: rire, langue: fr}
+  - {handle: "@KarimDuval",             intention: rire, langue: fr}
+  - {handle: "@MontreuxComedy",         intention: rire, langue: fr}
   - {handle: "@jontron",                intention: rire, langue: en}
   - {handle: "@DrewGooden",             intention: rire, langue: en}
   - {handle: "@dannygonzalez",          intention: rire, langue: en}
