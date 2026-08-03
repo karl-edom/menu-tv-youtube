@@ -2,11 +2,19 @@ name: Menu TV quotidien
 
 on:
   schedule:
-    # 06h17 UTC = 08h17 Paris en ete, 07h17 en hiver.
-    # Pas a l'heure pile : GitHub met les taches planifiees dans une file
-    # commune, et la minute 0 est celle que tout le monde choisit. Aux heures
-    # de pointe les runs y sont retardes, parfois abandonnes.
-    - cron: "17 6 * * *"
+    # TROIS horaires, pas un. GitHub met les taches planifiees dans une file
+    # commune : une execution retardee est courante, et une execution manquee
+    # DISPARAIT sans jamais etre rattrapee. Un seul cron, c'est un pari.
+    #
+    # Le job est idempotent - le relancer ne fait que regenerer la page - donc
+    # la redondance ne coute rien : si le premier tir passe, les suivants ne
+    # font que rafraichir avec les videos parues entre-temps.
+    #
+    # Heures UTC, decalees de l'heure pile (la minute 0 est celle que tout le
+    # monde choisit, donc la plus encombree).
+    - cron: "17 6 * * *"    # 08h17 Paris en ete
+    - cron: "43 8 * * *"    # 10h43
+    - cron: "9 11 * * *"    # 13h09
   workflow_dispatch: {}
 
 permissions:
