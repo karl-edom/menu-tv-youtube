@@ -35,6 +35,10 @@
   "id": "UCLLmx6mq1ninfIC1TrQ0w2g",
   "nom": "Alpha Cast"
  },
+ "@Alt236": {
+  "id": "UC1KxoDAzbWOWOhw5GbsE-Bw",
+  "nom": "ALT 236"
+ },
  "@Amixem": {
   "id": "UCgvqvBoSHB1ctlyyhoHrGwQ",
   "nom": "Amixem"
@@ -48,6 +52,10 @@
   "nom": "ARTE Cinema",
   "resolu_par_recherche": true,
   "ressemblance": 1.0
+ },
+ "@Assemblee-nationale": {
+  "id": "UCnflyRN1KOXDp6VM-_EZJgw",
+  "nom": "Assemblée nationale"
  },
  "@Astronogeek": {
   "id": "UC5X4e8ScZI2AFd_vkjSoyoQ",
@@ -88,6 +96,10 @@
  "@BricoleurPro": {
   "id": "UCDwuUuPfhL3bhBMb63-BbHQ",
   "nom": "Bricoleur Pro"
+ },
+ "@BrunoMaltor": {
+  "id": "UCSdJiWi0tq9CAx1bizne6mA",
+  "nom": "Bruno Maltor"
  },
  "@CGPGrey": {
   "id": "UC2C_jShtL725hvbm1arSV9w",
@@ -141,9 +153,19 @@
   "id": "UCyWqModMQlbIo8274Wh_ZsQ",
   "nom": "Cyprien"
  },
+ "@DamienDekarz": {
+  "id": "UCNfL7Zk1hfRJJwPq42sKC7w",
+  "nom": "Damien DEKARZ"
+ },
  "@Defunctland": {
   "id": "UCVo63lbKHjC04KqYhwSZ_Pg",
   "nom": "Defunctland"
+ },
+ "@DeusExSilicium": {
+  "id": "UCH6ppHEvV3_WIXEwmhv9HEg",
+  "nom": "Deus Ex Silicium",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@DirtyBiology": {
   "id": "UCtqICqGbPSbTN09K1_7VZ3Q",
@@ -211,6 +233,10 @@
   "id": "UC7sXGI8p8PvKosLWagkK9wQ",
   "nom": "Heu?reka"
  },
+ "@Heureka": {
+  "id": "UCVmolw2v0rAdLPp0AIrXw8w",
+  "nom": "Heureka"
+ },
  "@HistoriaCivilis": {
   "id": "UCv_vLHiWVBh_FR9vbeuiY-A",
   "nom": "Historia Civilis"
@@ -234,6 +260,16 @@
  "@JoueurDuGrenier": {
   "id": "UC_yP2DpIgs5Y1uWC0T03Chw",
   "nom": "Joueur Du Grenier"
+ },
+ "@KarimDuval": {
+  "id": "UC57bDOxg_KlFMn2ze5f0QlQ",
+  "nom": "Karim Duval",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
+ "@KilianBron": {
+  "id": "UCYyLRVEIIGWxk4ZykPgaaGQ",
+  "nom": "Kilian Bron"
  },
  "@Konbini": {
   "id": "UCHQda5vLxrH0Ff0I0kMq4zw",
@@ -263,6 +299,10 @@
   "resolu_par_recherche": true,
   "ressemblance": 1.0
  },
+ "@LeDessousdesCartesARTE": {
+  "id": "UCHGMBrXUzClgjEzBMei-Jdw",
+  "nom": "Le Dessous des Cartes - ARTE"
+ },
  "@LeFossoyeurdeFilms": {
   "id": "UCwbV8cTR4yBgFdfa_BXV2OA",
   "nom": "Le Fossoyeur de Films",
@@ -273,6 +313,12 @@
   "id": "UCYpRDnhk5H8h16jpS84uqsA",
   "nom": "Le Monde"
  },
+ "@LePrecepteur": {
+  "id": "UCvRgiAmogg7a_BgQ_Ftm6fA",
+  "nom": "Le Précepteur",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
+ },
  "@LeReveilleur": {
   "id": "UC1EacOJoqsKaYxaDomTCTEQ",
   "nom": "Le Réveilleur"
@@ -280,6 +326,14 @@
  "@LeVortexOfficiel": {
   "date": "2026-08-01T06:45:54.750254+00:00",
   "echec": true
+ },
+ "@LesEchosTV": {
+  "id": "UChZWs6PJY0hND384d2_RrhQ",
+  "nom": "Les Echos"
+ },
+ "@LesRevuesduMonde": {
+  "id": "UCnf0fDz1vTYW-sl36wbVMbg",
+  "nom": "Les Revues du Monde"
  },
  "@LesRevueursOfficiel": {
   "date": "2026-07-31T22:00:30.152111+00:00",
@@ -311,9 +365,21 @@
   "id": "UCYnvxJ-PKiGXo_tYXpWAC-w",
   "nom": "Micode"
  },
+ "@MonsieurBidouille": {
+  "id": "UCSULDz1yaHLVQWHpm4g_GHA",
+  "nom": "Monsieur Bidouille"
+ },
+ "@MonsieurPhi": {
+  "id": "UCqA8H22FwgBVcF3GJpp0MQw",
+  "nom": "Monsieur Phi"
+ },
  "@MonsieurSam": {
   "id": "UCZwoKGqkW7vsmxLtD8jk7dQ",
   "nom": "Monsieur Sam"
+ },
+ "@MontreuxComedy": {
+  "id": "UCPHJfLg1VeNBsfzzTszpmmQ",
+  "nom": "Montreux Comedy"
  },
  "@NakeyJakey": {
   "id": "UCSdma21fnJzgmPodhC9SJ3g",
@@ -330,6 +396,12 @@
  "@Nerdwriter1": {
   "id": "UCJkMlOu7faDgqh4PfzbpLdg",
   "nom": "Nerdwriter1"
+ },
+ "@NexusVI": {
+  "id": "UC8-UThnwzBI5ApzVG4MY7VQ",
+  "nom": "NEXUS VI",
+  "resolu_par_recherche": true,
+  "ressemblance": 1.0
  },
  "@Nicolas_Vitiello": {
   "id": "UCFL6ZZTFon_DFEu7MOprv3A",
@@ -356,6 +428,10 @@
  "@OsonsCauser": {
   "id": "UCVeMw72tepFl1Zt5fvf9QKQ",
   "nom": "Osons Causer"
+ },
+ "@Palmashow": {
+  "id": "UCoZoRz4-y6r87ptDp4Jk74g",
+  "nom": "Palmashow"
  },
  "@PasseScience": {
   "id": "UCsz9DiwPtgDvxJ-njWnieZw",
@@ -394,6 +470,10 @@
  "@Scilabus": {
   "id": "UCeR8BYZS7IHYjk_9Mh5JgkA",
   "nom": "Scilabus"
+ },
+ "@SebMontazRosset": {
+  "date": "2026-08-04T07:46:36.544326+00:00",
+  "echec": true
  },
  "@SlowMoGuys": {
   "id": "UCUK0HBIBWgM2c4vsPhkYY4w",
@@ -437,6 +517,10 @@
   "resolu_par_recherche": true,
   "ressemblance": 1.0
  },
+ "@Sylvqin": {
+  "id": "UCseGV3amBLISlIOMQodPfVQ",
+  "nom": "Sylvqin"
+ },
  "@TLDRnewsEU": {
   "id": "UC-eegKVWEgBCa4OzjnK_PtA",
   "nom": "TLDR News EU"
@@ -479,6 +563,10 @@
   "id": "UCWedHS9qKebauVIK2J7383g",
   "nom": "Underscore_"
  },
+ "@Verino": {
+  "id": "UCLQKm4yNlKdqllJlUAeEMjg",
+  "nom": "eltom reyes vera"
+ },
  "@Vox": {
   "id": "UCLXo7UDZvByw2ixzpQCufnA",
   "nom": "Vox"
@@ -494,6 +582,10 @@
  "@ZeratoR": {
   "id": "UCZ_oIYI9ZNpOfWbpZxWNuRQ",
   "nom": "ZeratoR"
+ },
+ "@at0mium": {
+  "id": "UCgxc2fti1i_nC_gEhET1rPw",
+  "nom": "At0mium - Archives"
  },
  "@bbcearth": {
   "id": "UCwmZiChSryoWQCZMIQezgTg",
@@ -514,6 +606,10 @@
   "nom": "Bloomberg Tech",
   "resolu_par_recherche": true,
   "ressemblance": 0.82
+ },
+ "@blowuparte": {
+  "date": "2026-08-04T07:46:36.544326+00:00",
+  "echec": true
  },
  "@dannygonzalez": {
   "id": "UCSUf5_EPEfl4zlBKZHkZdmw",
@@ -541,6 +637,10 @@
   "id": "UCf9BO33b-MnIxB5y0azrxmg",
   "nom": "Jimmy Carr"
  },
+ "@jokariz6803": {
+  "id": "UCtSNggS2fln1-a9FVL13g4g",
+  "nom": "Jokariz"
+ },
  "@jontron": {
   "id": "UCNqENNwS0IHYNJmHEyhsP5w",
   "nom": "jontron"
@@ -549,9 +649,17 @@
   "id": "UCsXVk37bltHxD1rDPwtNM8Q",
   "nom": "Kurzgesagt – In a Nutshell"
  },
+ "@lerevenumedia": {
+  "id": "UCTtMOVyHOKHp4i7lrnTfsiw",
+  "nom": "Le Revenu"
+ },
  "@lexfridman": {
   "id": "UCSHZKyawb77ixDdsGog4iWA",
   "nom": "Lex Fridman"
+ },
+ "@lhistoirenousledira": {
+  "id": "UCN4TCCaX-gqBNkrUqXdgGRA",
+  "nom": "L'Histoire nous le dira"
  },
  "@mattstefani": {
   "id": "UCQ1ffXBtmuSbSxmaM363-eA",
@@ -592,6 +700,10 @@
  "@ushuaiatv": {
   "id": "UCLCyp2cCf8-O9ZaZnVrs-og",
   "nom": "ushuaiatv"
+ },
+ "@verdeterreproduction": {
+  "id": "UCUaPiJJ2wH9CpuPN4zEB3nA",
+  "nom": "Ver de Terre Production"
  },
  "@veritasium": {
   "id": "UCHnyfMqiRRG1u-2MsSQLbXA",
