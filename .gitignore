@@ -4,3 +4,4 @@ __pycache__/
 venv/
 public/
 .DS_Store
+.test_accents

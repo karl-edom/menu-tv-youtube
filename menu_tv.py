@@ -296,6 +296,73 @@ def chercher_chaine(api: Api, handle: str) -> dict | None:
     return None
 
 
+def charger_chaines(chemin: Path) -> list[dict]:
+    """Lit channels.yaml en supposant qu'il contient des fautes de frappe.
+
+    C'est un fichier tenu à la main, parfois depuis un téléphone. Une ligne
+    « - » toute seule, une accolade oubliée, un handle vide : le YAML se charge
+    quand même, mais produit un None ou un dict incomplet au milieu de la liste,
+    et le script explosait plus loin sur un « NoneType is not subscriptable »
+    incompréhensible — en supprimant le menu du jour pour une virgule.
+
+    Règle retenue : une entrée douteuse est écartée et signalée, pas fatale.
+    Cent quarante-sept chaînes valides valent mieux que zéro menu.
+    """
+    doc = yaml.safe_load(chemin.read_text(encoding="utf-8")) or {}
+    brutes = doc.get("chaines") or []
+    if not isinstance(brutes, list):
+        raise SystemExit("channels.yaml : la clé « chaines » doit être une liste.")
+
+    intentions_connues = {cle for cle, *_ in INTENTIONS}
+    valides, rejets, deja_vus = [], [], {}
+
+    for rang, c in enumerate(brutes, 1):
+        def jeter(motif):
+            rejets.append((rang, motif, c))
+
+        if c is None:
+            jeter("entrée vide (un « - » sans rien derrière ?)")
+            continue
+        if not isinstance(c, dict):
+            jeter("ce n'est pas une entrée {handle: …} — accolades oubliées ?")
+            continue
+
+        handle = str(c.get("handle") or "").strip()
+        intention = str(c.get("intention") or "").strip()
+        langue = str(c.get("langue") or "").strip().lower()
+
+        if len(handle) < 2 or not handle.startswith("@"):
+            jeter(f"handle inutilisable : {handle!r}")
+            continue
+        if " " in handle:
+            jeter(f"espace dans le handle : {handle!r} — c'est l'identifiant "
+                  "de l'URL, jamais le nom affiché")
+            continue
+        if intention not in intentions_connues:
+            jeter(f"intention inconnue : {intention!r}")
+            continue
+        if langue not in {"fr", "en"}:
+            jeter(f"langue inconnue : {langue!r}")
+            continue
+
+        precedent = deja_vus.get(handle.lower())
+        if precedent:
+            jeter(f"doublon de {handle} (déjà ligne {precedent})")
+            continue
+
+        deja_vus[handle.lower()] = rang
+        valides.append({"handle": handle, "intention": intention, "langue": langue})
+
+    if rejets:
+        print(f"— channels.yaml : {len(rejets)} entrée(s) écartée(s) "
+              f"sur {len(brutes)} :")
+        for rang, motif, _ in rejets:
+            print(f"    · entrée n°{rang} — {motif}")
+    if not valides:
+        raise SystemExit("channels.yaml : aucune chaîne exploitable.")
+    return valides
+
+
 def resoudre_handles(api: Api, chaines: list[dict]):
     """@handle -> channel_id. Résolu une fois, puis mis en cache.
 
@@ -965,8 +1032,7 @@ def main():
     ap.add_argument("--langues", default="fr,en")
     args = ap.parse_args()
 
-    config = yaml.safe_load((RACINE / "channels.yaml").read_text(encoding="utf-8"))
-    chaines = config["chaines"]
+    chaines = charger_chaines(RACINE / "channels.yaml")
     langues = set(args.langues.split(","))
     chaines = [c for c in chaines if c["langue"] in langues]
 

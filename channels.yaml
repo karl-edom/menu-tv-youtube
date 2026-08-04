@@ -42,7 +42,6 @@ chaines:
   - {handle: "@lerevenumedia",          intention: actualites, langue: fr}
   - {handle: "@Assemblee-nationale",    intention: actualites, langue: fr}
   - {handle: "@bloomberg",              intention: actualites, langue: en}
-  -
 
   # ------------------------------------------------------------- COMPRENDRE
   # Mécanismes, sciences, mathématiques, technique. Intemporel.
@@ -79,7 +78,6 @@ chaines:
   # Économie, géopolitique, société, enquête. Daté et situé.
   - {handle: "@Heu7reka",               intention: monde, langue: fr}
   - {handle: "@StupidEconomics",        intention: monde, langue: fr}
-  - {handle: "@OsonsCauser",            intention: monde, langue: fr}
   - {handle: "@datagueule",             intention: monde, langue: fr}
   - {handle: "@blastinfo",              intention: monde, langue: fr}
   - {handle: "@Micode",                 intention: monde, langue: fr}
@@ -141,7 +139,6 @@ chaines:
   - {handle: "@verdeterreproduction",   intention: faire, langue: fr}
   - {handle: "@DamienDekarz",           intention: faire, langue: fr}
   - {handle: "@MonsieurBidouille",      intention: faire, langue: fr}
-  - {handle: "@ChefMichelDumas",        intention: faire, langue: fr}
   - {handle: "@Fireship",               intention: faire, langue: en}
   - {handle: "@tested",                 intention: faire, langue: en}
   - {handle: "@ThisOldTony",            intention: faire, langue: en}
@@ -175,7 +172,6 @@ chaines:
   - {handle: "@LePrecepteur",           intention: ecouter, langue: fr}
   - {handle: "@MonsieurPhi",            intention: ecouter, langue: fr}
   - {handle: "@jokariz6803",            intention: ecouter, langue: fr}
-  - {handle: "@",                intention: ecouter, langue: fr}
   - {handle: "@lexfridman",             intention: ecouter, langue: en}
   - {handle: "@hubermanlab",            intention: ecouter, langue: en}
   - {handle: "@TheDiaryOfACEO",         intention: ecouter, langue: en}
