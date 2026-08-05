@@ -199,7 +199,6 @@ chaines:
   # ------------------------------------------------------------------- RIRE
   - {handle: "@Cyprien",                intention: rire, langue: fr}
   - {handle: "@Squeezie",               intention: rire, langue: fr}
-  - {handle: "@McFlyetCarlito",         intention: rire, langue: fr}
   - {handle: "@Palmashow",              intention: rire, langue: fr}
   - {handle: "@GoldenMoustache",        intention: rire, langue: fr}
   - {handle: "@Verino",                 intention: rire, langue: fr}
