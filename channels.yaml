@@ -98,7 +98,7 @@ chaines:
   - {handle: "@Bolchegeek",             intention: oeuvres, langue: fr}
   - {handle: "@LinksTheSun",            intention: oeuvres, langue: fr}
   - {handle: "@CalmosOfficiel",         intention: oeuvres, langue: fr}
-  - {handle: "@blowuparte",             intention: oeuvres, langue: fr}
+  - {handle: "@blowuplactualiteducinema", intention: oeuvres, langue: fr}
   - {handle: "@Alt236",                 intention: oeuvres, langue: fr}
   - {handle: "@NexusVI",                intention: oeuvres, langue: fr}
   - {handle: "@Nerdwriter1",            intention: oeuvres, langue: en}
@@ -152,7 +152,7 @@ chaines:
   - {handle: "@Boreales",               intention: regarder, langue: fr}
   - {handle: "@ushuaiatv",              intention: regarder, langue: fr}
   - {handle: "@KilianBron",             intention: regarder, langue: fr}
-  - {handle: "@SebMontazRosset",        intention: regarder, langue: fr}
+  - {handle: "@sebmontazstudio",        intention: regarder, langue: fr}
   - {handle: "@BrunoMaltor",            intention: regarder, langue: fr}
   - {handle: "@bbcearth",               intention: regarder, langue: en}
   - {handle: "@NatGeo",                 intention: regarder, langue: en}
