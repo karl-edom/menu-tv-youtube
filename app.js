@@ -21,7 +21,46 @@
     theme: "menu-tv:theme",
     temps: "menu-tv:temps",
     montrees: "menu-tv:montrees",
+    tirage: "menu-tv:tirage",
   };
+
+  /* Le tirage du jour est FIGÉ. Sans ça, chaque rafraîchissement recomposait
+     la grille — et comme l'affichage inscrit les vidéos dans « montrées », le
+     tour suivant les rétrogradait et en proposait d'autres. Recharger la page
+     suffisait donc à changer le menu, ce qui est précisément le défilement
+     infini qu'on veut supprimer.
+
+     Une case attribuée le reste jusqu'au lendemain. Elle n'est rejouée que si
+     sa vidéo cesse d'être proposable : ouverte, reportée, chaîne masquée,
+     langue décochée, ou trop longue pour le temps qu'on vient de déclarer.
+
+     Un tirage par budget de temps : « 20 minutes » et « tout le temps » sont
+     deux menus différents, chacun stable de son côté. Passer de l'un à
+     l'autre et revenir ne rebat donc rien. */
+  function empreinteReglages(reg) {
+    return JSON.stringify([
+      [...reg.langues].sort(),
+      [...reg.chainesMasquees].sort(),
+    ]);
+  }
+
+  function lireTirage(reg, donnees) {
+    const t = lire(CLES.tirage, null);
+    if (!t
+      || t.jour !== aujourdhui()
+      || t.build !== donnees.genere_le
+      || t.empreinte !== empreinteReglages(reg)) return {};
+    return t.grilles || {};
+  }
+
+  function ecrireTirage(reg, donnees, grilles) {
+    ecrire(CLES.tirage, {
+      jour: aujourdhui(),
+      build: donnees.genere_le,
+      empreinte: empreinteReglages(reg),
+      grilles,
+    });
+  }
 
   /* Une vidéo affichée et non ouverte, c'est un refus. La remontrer demain,
      c'est reproduire exactement ce qu'on reproche aux plateformes.
@@ -155,7 +194,7 @@
   /* Mêmes règles que la sélection serveur : une case = une vidéo, une chaîne
      n'apparaît qu'une fois dans la grille, et les cases les plus pauvres sont
      servies en premier pour ne pas se faire rafler leur seul candidat. */
-  function construireGrille(donnees, reg, histo, reportsDus, differes, budget, montrees) {
+  function construireGrille(donnees, reg, histo, reportsDus, differes, budget, montrees, epingles) {
     const grille = new Map();
     const chainesPrises = new Set();
 
@@ -176,20 +215,34 @@
     // candidat plus court, un cran plus bas dans le vivier.
     const tientDansLeTemps = (v) => budget === null || v.duree_s <= budget;
 
+    const proposable = (v) =>
+      reg.langues.includes(v.langue) &&
+      !reg.chainesMasquees.includes(v.chaine_id) &&
+      !histo[v.id] &&
+      !differes.has(v.id) &&
+      tientDansLeTemps(v);
+
     const eligibles = (cellule) =>
       (donnees.vivier[cellule] || []).filter(
-        (v) =>
-          reg.langues.includes(v.langue) &&
-          !reg.chainesMasquees.includes(v.chaine_id) &&
-          !histo[v.id] &&
-          !differes.has(v.id) &&
-          tientDansLeTemps(v) &&
-          !chainesPrises.has(v.chaine_id)
+        (v) => proposable(v) && !chainesPrises.has(v.chaine_id)
       );
 
     const cellules = [];
     for (const i of donnees.intentions)
       for (const c of i.creneaux) cellules.push(`${i.cle}|${c}`);
+
+    // 2. Le tirage déjà fait aujourd'hui. On le repose tel quel — c'est ce qui
+    //    rend le menu stable d'un rafraîchissement à l'autre. Une épingle dont
+    //    la vidéo n'est plus proposable est simplement ignorée : sa case
+    //    repartira au tirage ci-dessous, et elle seule.
+    for (const cellule of cellules) {
+      const e = epingles[cellule];
+      if (!e || grille.has(cellule)) continue;
+      const v = (donnees.vivier[cellule] || []).find((x) => x.id === e.id);
+      if (!v || !proposable(v) || chainesPrises.has(v.chaine_id)) continue;
+      grille.set(cellule, e.revu ? { ...v, revu: true } : v);
+      chainesPrises.add(v.chaine_id);
+    }
 
     // Rareté calculée avant toute attribution, sinon l'ordre dépend de lui-même.
     const rarete = new Map(
@@ -276,7 +329,17 @@
     const minutes = tempsDispo();
     const budget = minutes === null ? null : minutes * 60;
     const montrees = lire(CLES.montrees, {});
-    const grille = construireGrille(donnees, reg, histo, dus, differes, budget, montrees);
+
+    // Un tirage figé par budget de temps. La clé « null » est le menu complet.
+    const grilles = lireTirage(reg, donnees);
+    const cleBudget = String(budget);
+    const grille = construireGrille(
+      donnees, reg, histo, dus, differes, budget, montrees, grilles[cleBudget] || {}
+    );
+    grilles[cleBudget] = Object.fromEntries(
+      [...grille].map(([cellule, v]) => [cellule, { id: v.id, revu: !!v.revu }])
+    );
+    ecrireTirage(reg, donnees, grilles);
 
     const actives = reg.intentions;
     const sections = donnees.intentions.map((intention, i) => {
@@ -579,6 +642,9 @@
         ecrire(CLES.historique, {});
         ecrire(CLES.reports, {});
         ecrire(CLES.montrees, {});
+        // Le tirage du jour aussi : sans ça, « oublier » laisserait la grille
+        // identique et donnerait l'impression de n'avoir rien fait.
+        ecrire(CLES.tirage, null);
         rendre(donnees);
         annoncer("Historique effacé.");
       }

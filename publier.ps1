@@ -73,25 +73,36 @@ if ($modifs) {
 }
 
 # --- 3. Enregistrer ----------------------------------------------------------
+#
+# Le dossier state/ appartient au robot, jamais a ce PC. Il contient sa
+# memoire : les videos deja proposees, et le stock de videos qui permet de
+# construire un menu meme quand YouTube refuse les flux du jour. Ta copie
+# locale est forcement en retard -- tu ne la regenres jamais ici.
+#
+# L'envoyer telle quelle ferait RECULER le robot : videos deja vues qui
+# reviennent, stock efface. On annule donc toute difference locale sur state/
+# avant d'enregistrer, et on ne met dans le commit que le reste.
 Titre "3/5  Enregistrement"
-if ($modifs) {
+git checkout -- state 2>&1 | Out-Null
+git add -A -- . ":(exclude)state"
+git diff --staged --quiet
+if ($LASTEXITCODE -ne 0) {
   if (-not $Message) {
     $Message = "Mise a jour du " + (Get-Date -Format "dd/MM/yyyy a HH:mm")
   }
-  git add -A
   git commit -m $Message --quiet
   if ($LASTEXITCODE -ne 0) { Stop2 "l'enregistrement a echoue. Copie l'ecran et montre-le moi." }
   Ok "enregistre : $Message"
 } else {
-  Write-Host "      rien a enregistrer" -ForegroundColor DarkGray
+  Write-Host "      rien a enregistrer (le cache du robot ne compte pas)" -ForegroundColor DarkGray
 }
 
 # --- 4. Recuperer ce que GitHub a de son cote --------------------------------
 # Le robot qui genere le menu chaque matin ecrit dans le dossier state/.
-# --no-edit : n'ouvre jamais d'editeur.  -X ours : en cas de desaccord sur
-# state/, garde la version locale. C'est un cache regenerable, sans risque.
+# --no-edit : n'ouvre jamais d'editeur. Comme on ne touche plus a state/ a
+# l'etape 3, il n'y a plus rien qui puisse entrer en conflit avec lui.
 Titre "4/5  Recuperation des modifications faites par le robot"
-$sortie = git pull --no-rebase --no-edit -X ours 2>&1
+$sortie = git pull --no-rebase --no-edit 2>&1
 $sortie | ForEach-Object { Write-Host "      $_" -ForegroundColor DarkGray }
 if ($LASTEXITCODE -ne 0) {
   Stop2 "la recuperation a echoue. Ne tape rien d'autre : copie tout cet ecran et montre-le moi."

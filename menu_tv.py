@@ -106,7 +106,7 @@ INTENTIONS = [
 
 # (clé, libellé, borne basse en minutes, borne haute)
 CRENEAUX = [
-    ("cafe", "Café", 3, 12),
+    ("cafe", "Café", 2, 12),
     ("pause", "Pause", 12, 30),
     ("soiree", "Soirée", 30, 75),
     ("long", "Long cours", 75, 100_000),
@@ -127,8 +127,14 @@ FENETRE_SECOURS = 75
 QUARANTAINE_CHAINE_JOURS = 10
 # Durée de mémoire du déjà-proposé, en jours. Au-delà, une vidéo peut revenir.
 MEMOIRE_JOURS = 240
-# Une vidéo plus courte que ça est un Short : exclue.
-DUREE_MIN_SECONDES = 90
+# Taille maximale du stock par chaîne. Une rédaction qui publie dix fois par
+# jour ne doit pas occuper toute la place au détriment d'un documentariste qui
+# publie une fois par mois.
+STOCK_PAR_CHAINE = 30
+# Une vidéo plus courte que ça est un Short : exclue. Doit rester aligné sur la
+# borne basse du créneau Café ci-dessus, sinon la plus stricte des deux gagne
+# en silence et le réglage visible ne veut plus rien dire.
+DUREE_MIN_SECONDES = CRENEAUX[0][2] * 60   # 2 min
 
 # Certaines intentions périment plus vite que d'autres. Une actualité de trois
 # semaines n'est pas « en rattrapage », elle est morte — alors qu'un
@@ -1122,34 +1128,99 @@ def main():
             for h, e in flux_rates[:8]:
                 print(f"    {h} — {e}", file=sys.stderr)
         if lus < len(actives) * 0.5:
-            print("⚠ plus de la moitié des flux ont échoué : la grille sera "
-                  "creuse, et ce n'est PAS un problème de channels.yaml.",
+            print("⚠ plus de la moitié des flux ont échoué. Ce n'est PAS un "
+                  "problème de channels.yaml : YouTube a refusé de servir les "
+                  "flux. Le menu est construit sur le stock des jours "
+                  "précédents ; il lui manque seulement les nouveautés du jour.",
                   file=sys.stderr)
 
-        toutes, a_enrichir = [], []
+        # --- Le stock ---------------------------------------------------
+        # Un flux RSS ne montre que les quinze dernières vidéos d'une chaîne,
+        # et YouTube peut refuser de le servir sans prévenir. Tant que la
+        # collecte du jour était la seule source, une mauvaise minute chez eux
+        # produisait un menu vide chez nous — alors que les vidéos éligibles,
+        # elles, n'avaient pas bougé : la fenêtre fait vingt et un jours.
+        #
+        # On garde donc ce qu'on a déjà vu. La collecte quotidienne ALIMENTE le
+        # stock, elle ne le remplace pas. Un flux muet ne coûte plus que les
+        # nouveautés du jour.
+        stock = charger_json("videos.json", {})
+        avant = len(stock)
+        nouvelles = 0
         for handle, (c, entrees) in par_chaine.items():
             for e in entrees:
-                v = Video(
-                    id=e["id"], titre=e["titre"],
-                    chaine_id=cache[handle]["id"], chaine_nom=cache[handle]["nom"],
-                    publie_le=e["publie_le"],
-                    intention=c["intention"], langue=c["langue"],
-                )
-                toutes.append(v)
-                a_enrichir.append(v.id)
+                if e["id"] not in stock:
+                    nouvelles += 1
+                fiche = stock.setdefault(e["id"], {})
+                fiche["cid"] = cache[handle]["id"]
+                fiche["nom"] = cache[handle]["nom"]
+                fiche.setdefault("titre", e["titre"])
+                fiche["publie_le"] = e["publie_le"].isoformat()
 
+        # Élagage : au-delà de la fenêtre de rattrapage, une vidéo ne peut plus
+        # être proposée — la garder ne ferait que gonfler le fichier et la note
+        # de quota. On borne aussi par chaîne, sinon une rédaction qui publie
+        # dix fois par jour occupe tout le stock à elle seule.
+        limite = datetime.now(timezone.utc) - timedelta(days=FENETRE_SECOURS)
+        stock = {
+            i: f for i, f in stock.items()
+            if datetime.fromisoformat(f["publie_le"]) > limite
+        }
+        par_source = {}
+        for i, f in stock.items():
+            par_source.setdefault(f["cid"], []).append((f["publie_le"], i))
+        for cid, lot in par_source.items():
+            for _, i in sorted(lot, reverse=True)[STOCK_PAR_CHAINE:]:
+                del stock[i]
+        print(f"— stock : {len(stock)} vidéos ({nouvelles} nouvelles, "
+              f"{avant} la veille)")
+
+        # L'intention et la langue ne sont PAS mémorisées : elles viennent de
+        # channels.yaml, qui peut changer d'un jour à l'autre. Une vidéo dont
+        # la chaîne a disparu du fichier disparaît donc du menu, sans purge.
+        profil = {
+            cache[c["handle"]]["id"]: (c["intention"], c["langue"])
+            for c in actives
+        }
+        toutes = []
+        for i, f in stock.items():
+            if f["cid"] not in profil:
+                continue
+            intention, langue = profil[f["cid"]]
+            toutes.append(Video(
+                id=i, titre=f.get("titre", ""),
+                chaine_id=f["cid"], chaine_nom=f.get("nom", ""),
+                publie_le=datetime.fromisoformat(f["publie_le"]),
+                duree_s=f.get("duree_s", 0), vues=f.get("vues", 0),
+                likes=f.get("likes", 0),
+                intention=intention, langue=langue,
+            ))
+
+        # On réinterroge tout le stock : les vues d'une vidéo récente bougent
+        # vite, et la surperformance se calcule sur des chiffres du jour. À
+        # 1 unité pour 50 vidéos, quelques milliers de fiches restent bien en
+        # dessous du plafond quotidien.
         try:
-            infos = enrichir(api, a_enrichir)
+            infos = enrichir(api, [v.id for v in toutes])
         except QuotaEpuise as e:
             print(f"⚠ {e} pendant l'enrichissement — page partielle",
                   file=sys.stderr)
             infos = {}
         for v in toutes:
             i = infos.get(v.id)
-            if i:
-                v.duree_s, v.vues, v.likes = i["duree_s"], i["vues"], i["likes"]
-                v.description = i["description"]
-                v.titre = i["titre"] or v.titre
+            if not i:
+                continue
+            v.duree_s, v.vues, v.likes = i["duree_s"], i["vues"], i["likes"]
+            v.description = i["description"]
+            v.titre = i["titre"] or v.titre
+            # La description n'est ni notée ni affichée : la stocker ferait
+            # tripler le fichier pour rien.
+            f = stock[v.id]
+            f["duree_s"], f["vues"], f["likes"] = v.duree_s, v.vues, v.likes
+            f["titre"] = v.titre
+
+        if not args.dry_run:
+            ecrire_json("videos.json", stock)
         unites = api.unites
         print(f"{len(toutes)} vidéos collectées · {unites} unités de quota")
 
