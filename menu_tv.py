@@ -1049,6 +1049,8 @@ def main():
     # Annuaire exporté vers la page : c'est lui qui alimente la liste des
     # créateurs dans le panneau de réglages.
     chaines_exportees = []
+    # Journal des exécutions réelles ; reste à None en mode démo.
+    journal = None
 
     if args.demo:
         toutes = fabriquer_demo(chaines)
@@ -1118,15 +1120,31 @@ def main():
                 par_chaine[c["handle"]] = (c, entrees)
 
         lus = len(actives) - len(flux_rates)
+        from collections import Counter
+        motifs = Counter(e for _, e in flux_rates)
         print(f"— flux RSS : {lus}/{len(actives)} lus")
         if flux_rates:
-            from collections import Counter
-            motifs = Counter(e for _, e in flux_rates)
             print(f"  {len(flux_rates)} échecs : "
                   + ", ".join(f"{m} ×{n}" for m, n in motifs.most_common()),
                   file=sys.stderr)
             for h, e in flux_rates[:8]:
                 print(f"    {h} — {e}", file=sys.stderr)
+
+        # Le journal d'un run GitHub est difficile à retrouver après coup, et
+        # il disparaît au bout de quelques semaines. On garde donc l'essentiel
+        # dans le dépôt lui-même : une ligne par exécution, trente au plus.
+        # C'est ce qui permet de diagnostiquer une panne passée sans dépendre
+        # de la mémoire de qui que ce soit.
+        journal = charger_json("journal.json", [])
+        journal.append({
+            "le": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+            "chaines": len(chaines),
+            "resolues": len(actives),
+            "flux_lus": lus,
+            "flux_echecs": dict(motifs.most_common()),
+            "exemples": [f"{h} — {e}" for h, e in flux_rates[:5]],
+        })
+        journal = journal[-30:]
         if lus < len(actives) * 0.5:
             print("⚠ plus de la moitié des flux ont échoué. Ce n'est PAS un "
                   "problème de channels.yaml : YouTube a refusé de servir les "
@@ -1255,6 +1273,16 @@ def main():
         f"{len(grille)} cases remplies sur {len(cellules())}"
         + (f" (dont {nb_rattrapage} en rattrapage)" if nb_rattrapage else "")
     )
+    if journal is not None:
+        journal[-1].update({
+            "stock": len(toutes),
+            "candidats": len(candidats),
+            "cases": f"{len(grille)}/{len(cellules())}",
+            "unites": unites,
+        })
+        if not args.dry_run:
+            ecrire_json("journal.json", journal)
+
     libelles = {i[0]: i[1] for i in INTENTIONS}
     creneaux_lib = {c[0]: c[1] for c in CRENEAUX}
     for inten, cren, cause in raisons_cases_vides(candidats, grille, histo_videos):
