@@ -160,5 +160,17 @@
   "resolues": 143,
   "stock": 1012,
   "unites": 21
+ },
+ {
+  "candidats": 591,
+  "cases": "12/34",
+  "chaines": 143,
+  "exemples": [],
+  "flux_echecs": {},
+  "flux_lus": 143,
+  "le": "2026-08-10T05:07+00:00",
+  "resolues": 143,
+  "stock": 1012,
+  "unites": 21
  }
 ]
