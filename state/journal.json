@@ -313,5 +313,26 @@
   "resolues": 143,
   "stock": 1034,
   "unites": 21
+ },
+ {
+  "candidats": 568,
+  "cases": "13/34",
+  "chaines": 143,
+  "exemples": [
+   "@lerevenumedia — HTTP 404",
+   "@bloomberg — HTTP 404",
+   "@ScienceEtonnante — HTTP 404",
+   "@DirtyBiology — HTTP 404",
+   "@LeReveilleur — HTTP 404"
+  ],
+  "flux_echecs": {
+   "HTTP 404": 72,
+   "HTTP 500": 1
+  },
+  "flux_lus": 70,
+  "le": "2026-08-13T03:33+00:00",
+  "resolues": 143,
+  "stock": 1059,
+  "unites": 22
  }
 ]
