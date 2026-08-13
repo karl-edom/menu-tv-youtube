@@ -81,35 +81,45 @@ NS = {
 # (clé, libellé, description, créneaux servis)
 INTENTIONS = [
     ("actualites", "Actualités", "Ce qui vient de se passer. Daté, périssable.",
-     ["cafe", "pause", "soiree"]),
+     ["cafe", "court", "pause", "soiree"]),
     ("comprendre", "Comprendre", "Un mécanisme. Ça marche comment ?",
-     ["cafe", "pause", "soiree", "long"]),
+     ["cafe", "court", "pause", "soiree", "long"]),
     ("monde", "Le monde", "Une situation. Pourquoi c'est comme ça ?",
-     ["cafe", "pause", "soiree", "long"]),
+     ["cafe", "court", "pause", "soiree", "long"]),
     ("oeuvres", "Œuvres", "Une rencontre. Cinéma, musique, littérature, art.",
-     ["cafe", "pause", "soiree", "long"]),
+     ["cafe", "court", "pause", "soiree", "long"]),
     ("recit", "Récit", "Une histoire. Début, milieu, fin.",
-     ["pause", "soiree", "long"]),
+     ["court", "pause", "soiree", "long"]),
     ("faire", "Faire", "Un savoir-faire. Un geste que tu peux reproduire.",
-     ["cafe", "pause", "soiree"]),
+     ["cafe", "court", "pause", "soiree"]),
     ("regarder", "Regarder", "Une image. La valeur est dans ce qu'on voit.",
-     ["cafe", "pause", "soiree"]),
+     ["cafe", "court", "pause", "soiree"]),
     ("ecouter", "Écouter penser", "Une conversation. Quelqu'un déroule une pensée.",
      ["soiree", "long"]),
     ("jouer", "Jouer", "Une partie. Jeu, compétition, univers.",
-     ["pause", "soiree", "long"]),
+     ["court", "pause", "soiree", "long"]),
     ("bouger", "Bouger", "Un corps en action. Sport, performance physique.",
-     ["cafe", "pause", "soiree"]),
+     ["cafe", "court", "pause", "soiree"]),
     ("rire", "Rire", "Un moment léger, assumé comme tel.",
-     ["cafe", "pause"]),
+     ["cafe", "court", "pause"]),
 ]
 
 # (clé, libellé, borne basse en minutes, borne haute)
+#
+# Cinq créneaux, pas quatre. « Café » couvrait 2 à 12 minutes : une vidéo de
+# onze minutes n'est pas un café, et rien sur la page ne prévenait de la
+# fourchette. Sur le stock réel, 27 % des « Café » dépassaient huit minutes —
+# c'est ce quart-là qui surprenait.
+#
+# La coupure est à 7 min parce que c'est là que le stock se creuse : 175
+# vidéos en dessous, un trou de 7 à 8, puis 69 au-dessus. On ne coupe pas au
+# milieu d'un peloton.
 CRENEAUX = [
-    ("cafe", "Café", 2, 12),
-    ("pause", "Pause", 12, 30),
-    ("soiree", "Soirée", 30, 75),
-    ("long", "Long cours", 75, 100_000),
+    ("cafe",   "Café",       2,  7),
+    ("court",  "Court",      7, 15),
+    ("pause",  "Pause",     15, 30),
+    ("soiree", "Soirée",    30, 75),
+    ("long",   "Long cours", 75, 100_000),
 ]
 
 
@@ -1107,9 +1117,13 @@ def main():
              "handle": c["handle"], "intention": c["intention"], "langue": c["langue"]}
             for c in actives
         ]
-        # 6 au lieu de 12 : au-delà, YouTube commence à refuser les flux.
+        # 3 au lieu de 6. YouTube ne renvoie pas 429 quand il nous rationne :
+        # il renvoie 404, comme si la chaîne n'existait pas. Le journal montre
+        # la progression — 143/143 flux lus au premier tir du matin, puis 8/143
+        # au troisième, puis des premiers tirs qui échouent aussi. C'est une
+        # réputation d'adresse IP qui se dégrade, pas un incident.
         par_chaine, flux_rates = {}, []
-        with ThreadPoolExecutor(max_workers=6) as ex:
+        with ThreadPoolExecutor(max_workers=3) as ex:
             futurs = {
                 ex.submit(lire_rss, cache[c["handle"]]["id"]): c for c in actives
             }
@@ -1316,7 +1330,19 @@ def main():
     (SORTIE / "index.html").write_text(html, encoding="utf-8")
     print(f"→ {SORTIE / 'index.html'}")
 
-    if not args.dry_run and not args.demo:
+    # UNE SEULE fois par jour, même si le workflow tourne trois fois.
+    #
+    # Chaque exécution consommait ~34 vidéos de la mémoire, et la mémoire sert
+    # à ne pas reproposer. Trois tirs par matin brûlaient donc une centaine de
+    # vidéos sur un vivier de ~570 : la grille se vidait à vue d'œil au fil de
+    # la matinée (25 cases au premier tir, 17 au troisième, mesuré). La
+    # redondance des horaires n'était gratuite qu'à condition que le job soit
+    # idempotent — il ne l'était pas. Il l'est maintenant.
+    jour = datetime.now(timezone.utc).date().isoformat()
+    deja_note = any(d.startswith(jour) for d in histo_videos.values())
+    if not args.dry_run and not args.demo and deja_note:
+        print("mémoire : déjà écrite aujourd'hui, on n'y touche pas")
+    elif not args.dry_run and not args.demo:
         aujourdhui = datetime.now(timezone.utc).isoformat()
         for v in grille.values():
             histo_videos[v.id] = aujourdhui

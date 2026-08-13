@@ -2,20 +2,20 @@ name: Menu TV quotidien
 
 on:
   schedule:
-    # TROIS horaires, pas un. GitHub met les taches planifiees dans une file
-    # commune : une execution retardee est courante, et une execution manquee
-    # DISPARAIT sans jamais etre rattrapee. Un seul cron, c'est un pari.
+    # DEUX horaires, plus trois. GitHub met les taches planifiees dans une file
+    # commune : une execution manquee DISPARAIT sans rattrapage, donc un cron
+    # unique reste un pari. Mais le journal a montre que le troisieme tir du
+    # matin se faisait systematiquement fermer la porte par YouTube (404 en
+    # serie), et qu'il abimait la reputation de l'adresse pour le lendemain.
     #
-    # Le job est idempotent - le relancer ne fait que regenerer la page - donc
-    # la redondance ne coute rien : si le premier tir passe, les suivants ne
-    # font que rafraichir avec les videos parues entre-temps.
+    # Deux tirs espaces de deux heures passaient, eux, sans incident. Et le
+    # stock de videos couvre desormais une journee entierement manquee : la
+    # redondance n'a plus a etre une assurance tous risques.
     #
     # Heures UTC, decalees de l'heure pile (la minute 0 est celle que tout le
-    # monde choisit, donc la plus encombree). Tout doit etre boucle avant
-    # 8h30 Paris, heure de lecture -- le dernier tir part donc a 07h41.
+    # monde choisit, donc la plus encombree). Tout est boucle avant 8h30 Paris.
     - cron: "13 1 * * *"    # 03h13 Paris en heure d'ete (02h13 en hiver)
-    - cron: "37 3 * * *"    # 05h37 Paris (04h37 en hiver)
-    - cron: "41 5 * * *"    # 07h41 Paris (06h41 en hiver)
+    - cron: "41 3 * * *"    # 05h41 Paris (04h41 en hiver)
   workflow_dispatch: {}
 
 permissions:
