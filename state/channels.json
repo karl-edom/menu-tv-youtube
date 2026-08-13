@@ -611,6 +611,10 @@
   "date": "2026-08-04T07:46:36.544326+00:00",
   "echec": true
  },
+ "@blowuplactualiteducinema": {
+  "id": "UCfE1oQ47oqyJNzM-nFy_gjA",
+  "nom": "Blow Up, l'actualité du cinéma (ou presque) - ARTE"
+ },
  "@dannygonzalez": {
   "id": "UCSUf5_EPEfl4zlBKZHkZdmw",
   "nom": "Danny Gonzalez",
@@ -680,6 +684,10 @@
  "@redbull": {
   "id": "UCblfuW_4rakIf2h6aqANefA",
   "nom": "Red Bull"
+ },
+ "@sebmontazstudio": {
+  "id": "UCKuFx3BSqYffMrwHSGlGkSg",
+  "nom": "SEB MONTAZ"
  },
  "@sixtysymbols": {
   "id": "UCvBqzzvUBLCs8Y7Axb-jZew",
