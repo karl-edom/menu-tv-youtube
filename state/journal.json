@@ -400,5 +400,25 @@
   "resolues": 143,
   "stock": 1155,
   "unites": 24
+ },
+ {
+  "candidats": 615,
+  "cases": "13/44",
+  "chaines": 143,
+  "exemples": [
+   "@LeMondefr — HTTP 404",
+   "@BFMBusiness — HTTP 404",
+   "@LesEchosTV — HTTP 404",
+   "@lerevenumedia — HTTP 404",
+   "@Assemblee-nationale — HTTP 404"
+  ],
+  "flux_echecs": {
+   "HTTP 404": 116
+  },
+  "flux_lus": 27,
+  "le": "2026-08-14T05:18+00:00",
+  "resolues": 143,
+  "stock": 1155,
+  "unites": 24
  }
 ]
