@@ -1,26 +1,5 @@
 [
  {
-  "candidats": 656,
-  "cases": "11/44",
-  "chaines": 143,
-  "exemples": [
-   "@BFMBusiness — HTTP 404",
-   "@LesEchosTV — HTTP 404",
-   "@lerevenumedia — HTTP 404",
-   "@Assemblee-nationale — HTTP 404",
-   "@bloomberg — HTTP 404"
-  ],
-  "flux_echecs": {
-   "HTTP 404": 99,
-   "HTTP 500": 2
-  },
-  "flux_lus": 42,
-  "le": "2026-08-20T04:19+00:00",
-  "resolues": 143,
-  "stock": 1244,
-  "unites": 25
- },
- {
   "candidats": 660,
   "cases": "13/44",
   "chaines": 143,
@@ -456,6 +435,18 @@
   "le": "2026-09-04T05:54+00:00",
   "resolues": 143,
   "stock": 1311,
+  "unites": 27
+ },
+ {
+  "candidats": 704,
+  "cases": "18/44",
+  "chaines": 143,
+  "exemples": [],
+  "flux_echecs": {},
+  "flux_lus": 143,
+  "le": "2026-09-04T08:12+00:00",
+  "resolues": 143,
+  "stock": 1331,
   "unites": 27
  }
 ]
