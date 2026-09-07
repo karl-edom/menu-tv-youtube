@@ -1,18 +1,6 @@
 [
  {
   "candidats": 667,
-  "cases": "15/44",
-  "chaines": 143,
-  "exemples": [],
-  "flux_echecs": {},
-  "flux_lus": 143,
-  "le": "2026-08-23T02:37+00:00",
-  "resolues": 143,
-  "stock": 1276,
-  "unites": 26
- },
- {
-  "candidats": 667,
   "cases": "10/44",
   "chaines": 143,
   "exemples": [],
@@ -437,6 +425,26 @@
   "le": "2026-09-06T08:06+00:00",
   "resolues": 143,
   "stock": 1334,
+  "unites": 27
+ },
+ {
+  "candidats": 694,
+  "cases": "15/44",
+  "chaines": 143,
+  "exemples": [
+   "@DirtyBiology — HTTP 404",
+   "@BaladeMentale — HTTP 404",
+   "@HygieneMentale — HTTP 404",
+   "@Underscore_ — HTTP 404",
+   "@DrNozman — HTTP 404"
+  ],
+  "flux_echecs": {
+   "HTTP 404": 61
+  },
+  "flux_lus": 82,
+  "le": "2026-09-07T06:07+00:00",
+  "resolues": 143,
+  "stock": 1328,
   "unites": 27
  }
 ]
