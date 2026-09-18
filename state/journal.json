@@ -1,17 +1,5 @@
 [
  {
-  "candidats": 685,
-  "cases": "17/44",
-  "chaines": 143,
-  "exemples": [],
-  "flux_echecs": {},
-  "flux_lus": 143,
-  "le": "2026-09-03T08:16+00:00",
-  "resolues": 143,
-  "stock": 1313,
-  "unites": 27
- },
- {
   "candidats": 686,
   "cases": "17/44",
   "chaines": 143,
@@ -478,6 +466,18 @@
   "le": "2026-09-18T05:55+00:00",
   "resolues": 143,
   "stock": 1327,
+  "unites": 27
+ },
+ {
+  "candidats": 734,
+  "cases": "19/44",
+  "chaines": 143,
+  "exemples": [],
+  "flux_echecs": {},
+  "flux_lus": 143,
+  "le": "2026-09-18T08:28+00:00",
+  "resolues": 143,
+  "stock": 1337,
   "unites": 27
  }
 ]
